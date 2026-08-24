@@ -18,6 +18,18 @@ npm run build
 npm run preview
 ```
 
+## Deploy na Vercel
+
+O projeto está pronto para deploy direto do repositório GitHub:
+
+1. Importe o repositório na Vercel.
+2. O framework é detectado automaticamente como Vite (build command `npm run build`, diretório de saída `dist`).
+3. O arquivo [`vercel.json`](vercel.json) já configura o redirecionamento de todas as rotas para `index.html`,
+   necessário porque o site usa React Router no lado do cliente (sem isso, atualizar a página em uma rota como
+   `/sobre` resultaria em erro 404).
+
+Nenhuma variável de ambiente é necessária no estado atual do projeto.
+
 ## Stack
 
 - React + Vite + TypeScript
