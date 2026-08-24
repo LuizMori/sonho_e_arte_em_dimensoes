@@ -5,13 +5,11 @@ import { SectionTitle } from "@/components/SectionTitle";
 import { ProjectCard } from "@/components/ProjectCard";
 import { ScrollIndicator } from "@/components/ScrollIndicator";
 import { DecorCurve, DecorStar } from "@/components/Decor";
+import { HeroArt } from "@/components/HeroArt";
 import { Button } from "@/components/ui/Button";
 import { projetosDestaque } from "@/data/projetos";
 import { servicos } from "@/data/servicos";
 import { filosofia } from "@/data/institucional";
-
-const heroImage =
-  "https://images.unsplash.com/photo-1581092787765-e3feb951d987?q=80&w=1920&auto=format&fit=crop";
 
 const dreamSteps = [
   {
@@ -59,12 +57,8 @@ export function Home() {
     <>
       {/* Hero */}
       <section className="relative h-[92vh] min-h-[640px] w-full overflow-hidden bg-navy-deep">
-        <img
-          src={heroImage}
-          alt="Impressora 3D em operação produzindo uma peça em camadas"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy-deep via-navy-deep/70 via-35% to-transparent" />
+        <HeroArt className="absolute inset-y-0 right-0 w-full sm:w-[80%] lg:w-[62%]" />
+        <div className="absolute inset-0 bg-gradient-to-r from-navy-deep via-navy-deep/75 to-transparent sm:via-navy-deep/55" />
 
         <div className="relative h-full container flex flex-col justify-end pb-16 sm:pb-24">
           <p className="label-caps text-orange mb-6 animate-fade-up">Estúdio de impressão 3D</p>
