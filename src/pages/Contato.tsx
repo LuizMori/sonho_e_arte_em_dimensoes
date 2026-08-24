@@ -30,11 +30,15 @@ export function Contato() {
   const onSubmit = async (data: ContatoFormData) => {
     setStatus("loading");
     try {
-      // Envio simulado. Para conectar a um backend real, substitua o bloco
-      // abaixo por uma chamada de API, por exemplo:
-      // await fetch("/api/contato", { method: "POST", body: JSON.stringify(data) });
-      await new Promise((resolve) => setTimeout(resolve, 900));
-      console.log("Mensagem de contato (simulada):", data);
+      const resposta = await fetch("/api/contato", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!resposta.ok) {
+        throw new Error("Falha ao enviar mensagem");
+      }
 
       setStatus("success");
       showToast({
@@ -131,7 +135,7 @@ export function Contato() {
             </Button>
 
             <p className="text-xs text-navy/50">
-              Este formulário simula o envio da mensagem. Nenhuma informação é transmitida a um servidor no momento.
+              Ao enviar, você concorda em compartilhar essas informações para que possamos responder seu contato.
             </p>
           </form>
         </Reveal>

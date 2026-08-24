@@ -97,8 +97,9 @@ Ambos os formulários usam `react-hook-form` com validação `zod`.
   `CONTACT_EMAIL`, com todos os dados preenchidos e o arquivo anexado (quando enviado, limite de 3MB). A
   lógica de envio fica em [`src/pages/Orcamento.tsx`](src/pages/Orcamento.tsx) e na função serverless
   [`api/orcamento.ts`](api/orcamento.ts).
-- **Contato** (`/contato`): por enquanto, o envio continua simulado (dados exibidos no console do navegador e
-  toast de sucesso). Para conectar a um backend real, siga o mesmo padrão usado em `api/orcamento.ts`.
+- **Contato** (`/contato`): também envia um e-mail real para `CONTACT_EMAIL`, sem anexo. A lógica de envio
+  fica em [`src/pages/Contato.tsx`](src/pages/Contato.tsx) e na função serverless
+  [`api/contato.ts`](api/contato.ts).
 
 ## Testando o envio de orçamento localmente
 
