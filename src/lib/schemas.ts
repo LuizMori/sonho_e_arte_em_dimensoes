@@ -3,12 +3,9 @@ import { z } from "zod";
 export const orcamentoSchema = z.object({
   nome: z.string().trim().min(2, "Informe seu nome completo"),
   email: z.string().trim().email("Informe um e-mail válido"),
-  whatsapp: z.string().trim().min(8, "Informe um número de WhatsApp válido"),
+  whatsapp: z.string().trim().min(8, "Informe um número de celular ou WhatsApp válido"),
   tipoProjeto: z.string().min(1, "Selecione o tipo de projeto"),
   quantidade: z.string().trim().min(1, "Informe a quantidade desejada"),
-  material: z.string().trim().min(1, "Informe o material desejado, se souber"),
-  cor: z.string().trim().min(1, "Informe a cor desejada, se souber"),
-  tamanho: z.string().trim().min(1, "Informe o tamanho aproximado"),
   possuiArquivo: z.enum(["sim", "nao"], { required_error: "Selecione uma opção" }),
   arquivo: z.instanceof(FileList).optional(),
   observacoes: z.string().trim().optional(),

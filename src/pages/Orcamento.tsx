@@ -11,9 +11,8 @@ import { orcamentoSchema, type OrcamentoFormData } from "@/lib/schemas";
 const tiposProjeto = [
   "Decoração",
   "Peça personalizada",
-  "Protótipo",
   "Miniatura ou colecionável",
-  "Utilidade doméstica",
+  "Objeto funcional",
   "Presente personalizado",
   "Outro",
 ];
@@ -83,7 +82,7 @@ export function Orcamento() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8" noValidate>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <Label htmlFor="nome">Nome</Label>
+                <Label htmlFor="nome">Nome Completo</Label>
                 <Input id="nome" placeholder="Seu nome completo" {...register("nome")} />
                 <FieldError message={errors.nome?.message} />
               </div>
@@ -95,7 +94,7 @@ export function Orcamento() {
             </div>
 
             <div>
-              <Label htmlFor="whatsapp">WhatsApp</Label>
+              <Label htmlFor="whatsapp">Celular/WhatsApp</Label>
               <Input id="whatsapp" placeholder="(00) 00000-0000" {...register("whatsapp")} />
               <FieldError message={errors.whatsapp?.message} />
             </div>
@@ -119,24 +118,6 @@ export function Orcamento() {
                 <Label htmlFor="quantidade">Quantidade</Label>
                 <Input id="quantidade" placeholder="Ex: 1 unidade" {...register("quantidade")} />
                 <FieldError message={errors.quantidade?.message} />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <div>
-                <Label htmlFor="material">Material desejado</Label>
-                <Input id="material" placeholder="Ex: PLA, ainda não sei" {...register("material")} />
-                <FieldError message={errors.material?.message} />
-              </div>
-              <div>
-                <Label htmlFor="cor">Cor</Label>
-                <Input id="cor" placeholder="Ex: roxo, ainda não sei" {...register("cor")} />
-                <FieldError message={errors.cor?.message} />
-              </div>
-              <div>
-                <Label htmlFor="tamanho">Tamanho aproximado</Label>
-                <Input id="tamanho" placeholder="Ex: 15 cm de altura" {...register("tamanho")} />
-                <FieldError message={errors.tamanho?.message} />
               </div>
             </div>
 

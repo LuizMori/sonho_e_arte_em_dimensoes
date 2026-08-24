@@ -62,9 +62,7 @@ export interface InformacaoInstitucional {
 }
 
 export interface ContatoInfo {
-  endereco: string;
   email: string;
   whatsapp: string;
-  telefone: string;
   redesSociais: { nome: string; url: string }[];
 }

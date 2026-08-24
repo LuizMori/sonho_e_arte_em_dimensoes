@@ -20,13 +20,11 @@ export const historiaSobre: InformacaoInstitucional = {
 };
 
 export const contatoInfo: ContatoInfo = {
-  endereco: "Endereço a definir (placeholder)",
   email: "contato@sonhoeartedimensoes.com.br",
-  whatsapp: "(00) 00000-0000",
-  telefone: "(00) 0000-0000",
+  whatsapp: "(11) 98374-0584",
   redesSociais: [
-    { nome: "Instagram", url: "https://instagram.com" },
-    { nome: "Pinterest", url: "https://pinterest.com" },
-    { nome: "WhatsApp", url: "https://wa.me/5500000000000" },
+    { nome: "WhatsApp", url: "https://wa.me/5511983740584" },
+    { nome: "Instagram", url: "https://www.instagram.com/sonhoearte.3d?igsi=bzdvZjk3OXp3NmF5" },
+    { nome: "Shopee", url: "https://br.shp.ee/xrexNYpP?share_channel_code=1" },
   ],
 };

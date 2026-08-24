@@ -54,7 +54,6 @@ export function Footer() {
           <ul className="space-y-3 text-sm text-cream-light/80">
             <li>{contatoInfo.email}</li>
             <li>{contatoInfo.whatsapp}</li>
-            <li>{contatoInfo.endereco}</li>
           </ul>
           <div className="flex gap-4 mt-6">
             {contatoInfo.redesSociais.map((rede) => (

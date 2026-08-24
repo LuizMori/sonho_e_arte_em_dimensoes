@@ -75,14 +75,6 @@ export function Contato() {
               <dd className="text-navy mt-1">{contatoInfo.whatsapp}</dd>
             </div>
             <div>
-              <dt className="label-caps text-neutral">Telefone</dt>
-              <dd className="text-navy mt-1">{contatoInfo.telefone}</dd>
-            </div>
-            <div>
-              <dt className="label-caps text-neutral">Endereço</dt>
-              <dd className="text-navy mt-1">{contatoInfo.endereco}</dd>
-            </div>
-            <div>
               <dt className="label-caps text-neutral">Redes sociais</dt>
               <dd className="mt-2 flex gap-4">
                 {contatoInfo.redesSociais.map((rede) => (
