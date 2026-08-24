@@ -7,6 +7,7 @@ import { Input, Textarea, Select, Label, FieldError } from "@/components/ui/Inpu
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { orcamentoSchema, type OrcamentoFormData } from "@/lib/schemas";
+import { fileToBase64 } from "@/lib/file";
 
 const tiposProjeto = [
   "Decoração",
@@ -41,11 +42,33 @@ export function Orcamento() {
   const onSubmit = async (data: OrcamentoFormData) => {
     setStatus("loading");
     try {
-      // Envio simulado. Para conectar a um backend real, substitua o bloco
-      // abaixo por uma chamada de API, por exemplo:
-      // await fetch("/api/orcamento", { method: "POST", body: formData });
-      await new Promise((resolve) => setTimeout(resolve, 900));
-      console.log("Solicitação de orçamento (simulada):", data);
+      const arquivoSelecionado = data.arquivo?.[0];
+      const arquivo = arquivoSelecionado
+        ? {
+            nome: arquivoSelecionado.name,
+            tipo: arquivoSelecionado.type,
+            conteudo: await fileToBase64(arquivoSelecionado),
+          }
+        : undefined;
+
+      const response = await fetch("/api/orcamento", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nome: data.nome,
+          email: data.email,
+          whatsapp: data.whatsapp,
+          tipoProjeto: data.tipoProjeto,
+          quantidade: data.quantidade,
+          possuiArquivo: data.possuiArquivo,
+          observacoes: data.observacoes,
+          arquivo,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Falha ao enviar solicitação de orçamento");
+      }
 
       setStatus("success");
       showToast({
@@ -140,8 +163,9 @@ export function Orcamento() {
                 {...register("arquivo")}
               />
               <p className="text-xs text-navy/50 mt-2">
-                Aceita arquivos 3D (.stl, .obj, .3mf) ou imagens de referência.
+                Aceita arquivos 3D (.stl, .obj, .3mf) ou imagens de referência. Tamanho máximo de 3MB.
               </p>
+              <FieldError message={errors.arquivo?.message} />
             </div>
 
             <div>
@@ -159,8 +183,7 @@ export function Orcamento() {
             </Button>
 
             <p className="text-xs text-navy/50">
-              Este formulário simula o envio da solicitação. Nenhuma informação é transmitida a um servidor no
-              momento.
+              Ao enviar, você concorda em compartilhar essas informações para que possamos preparar seu orçamento.
             </p>
           </form>
         </Reveal>

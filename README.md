@@ -28,7 +28,16 @@ O projeto está pronto para deploy direto do repositório GitHub:
    necessário porque o site usa React Router no lado do cliente (sem isso, atualizar a página em uma rota como
    `/sobre` resultaria em erro 404).
 
-Nenhuma variável de ambiente é necessária no estado atual do projeto.
+O formulário de orçamento envia e-mail de verdade através de uma função serverless (`api/orcamento.ts`) e do
+serviço [Resend](https://resend.com). Para isso, configure em Vercel > Settings > Environment Variables:
+
+- `RESEND_API_KEY`: chave de API gerada na sua conta do Resend.
+- `CONTACT_EMAIL`: e-mail que deve receber os pedidos de orçamento.
+
+Os e-mails são enviados a partir de `orcamento@sonhoearte3d.com.br`. Para isso funcionar, o domínio
+`sonhoearte3d.com.br` precisa estar **verificado no Resend** (Domains > Add Domain, adicionando os registros
+DNS de SPF/DKIM que o Resend fornece no painel de domínio do registrador). Sem essa verificação, o envio
+falha. Veja [`.env.example`](.env.example) para mais detalhes.
 
 ## Stack
 
@@ -82,15 +91,30 @@ Adicione um novo objeto ao array `posts` em [`src/data/posts.ts`](src/data/posts
 
 ## Formulários (Orçamento e Contato)
 
-Os formulários em `/orcamento` e `/contato` usam `react-hook-form` com validação `zod`. No estado atual, o
-envio é simulado: os dados são exibidos no console do navegador e um toast de sucesso é mostrado.
+Ambos os formulários usam `react-hook-form` com validação `zod`.
 
-Para conectar um backend real, procure os comentários `// Envio simulado.` dentro de
-[`src/pages/Orcamento.tsx`](src/pages/Orcamento.tsx) e [`src/pages/Contato.tsx`](src/pages/Contato.tsx) e
-substitua a chamada simulada (`setTimeout`) por uma chamada de API real (`fetch`, cliente HTTP, etc.).
+- **Orçamento** (`/orcamento`): envia um e-mail real (ver seção "Deploy na Vercel" acima) para
+  `CONTACT_EMAIL`, com todos os dados preenchidos e o arquivo anexado (quando enviado, limite de 3MB). A
+  lógica de envio fica em [`src/pages/Orcamento.tsx`](src/pages/Orcamento.tsx) e na função serverless
+  [`api/orcamento.ts`](api/orcamento.ts).
+- **Contato** (`/contato`): por enquanto, o envio continua simulado (dados exibidos no console do navegador e
+  toast de sucesso). Para conectar a um backend real, siga o mesmo padrão usado em `api/orcamento.ts`.
+
+## Testando o envio de orçamento localmente
+
+O endpoint `/api/orcamento` só existe como função serverless da Vercel, então `npm run dev` (Vite puro) não o
+executa, isso é esperado. Para testar localmente:
+
+```bash
+npm install -g vercel
+vercel dev
+```
+
+Crie um `.env.local` (baseado em [`.env.example`](.env.example)) com `RESEND_API_KEY` e `CONTACT_EMAIL`
+antes de rodar `vercel dev`. Alternativamente, teste em um deploy de preview na Vercel, que já lê as
+variáveis de ambiente configuradas no projeto.
 
 ## Observações
 
-- Nenhum dado de contato (endereço, telefone) é real; todos são placeholders claramente identificáveis em
-  `src/data/institucional.ts`.
-- O upload de arquivo no formulário de orçamento não realiza envio real de arquivo, apenas captura a seleção.
+- Nenhum outro dado de contato além do WhatsApp, Instagram e Shopee em `src/data/institucional.ts` é real;
+  substitua conforme necessário.
