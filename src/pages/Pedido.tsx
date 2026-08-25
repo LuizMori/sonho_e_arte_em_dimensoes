@@ -43,12 +43,32 @@ export function Pedido() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
 
+  const sincronizarPagamento = async () => {
+    if (!orderId) return;
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) return;
+
+    try {
+      await fetch("/api/mercadopago/sync-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ orderId }),
+      });
+    } catch {
+      // silencioso: é só uma tentativa periódica de sincronização, o webhook continua sendo a via principal
+    }
+    await buscarPedido();
+  };
+
   useEffect(() => {
     if (order?.status !== "pending_payment") return;
 
+    sincronizarPagamento();
     const intervalo = setInterval(() => {
-      buscarPedido();
-    }, 4000);
+      sincronizarPagamento();
+    }, 5000);
 
     return () => clearInterval(intervalo);
     // eslint-disable-next-line react-hooks/exhaustive-deps

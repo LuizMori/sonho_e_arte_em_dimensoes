@@ -2,21 +2,13 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-function validarAssinatura(req: VercelRequest, secret: string): boolean {
+function validarAssinatura(req: VercelRequest, secret: string, dataId: string): boolean {
   const signatureHeader = req.headers["x-signature"];
   const requestId = req.headers["x-request-id"];
   const signature = Array.isArray(signatureHeader) ? signatureHeader[0] : signatureHeader;
   const reqId = Array.isArray(requestId) ? requestId[0] : requestId;
 
-  console.log("[mp-webhook] x-signature recebido:", signature);
-  console.log("[mp-webhook] x-request-id recebido:", reqId);
-  console.log("[mp-webhook] query:", JSON.stringify(req.query));
-  console.log("[mp-webhook] body:", JSON.stringify(req.body));
-
-  if (!signature || !reqId) {
-    console.log("[mp-webhook] faltando signature ou request-id");
-    return false;
-  }
+  if (!signature || !reqId) return false;
 
   const partes = Object.fromEntries(
     signature.split(",").map((parte) => {
@@ -27,28 +19,14 @@ function validarAssinatura(req: VercelRequest, secret: string): boolean {
 
   const ts = partes.ts;
   const v1 = partes.v1;
-  if (!ts || !v1) {
-    console.log("[mp-webhook] faltando ts ou v1 no header de assinatura");
-    return false;
-  }
+  if (!ts || !v1) return false;
 
-  const dataId = typeof req.query["data.id"] === "string" ? req.query["data.id"] : req.body?.data?.id;
-  if (!dataId) {
-    console.log("[mp-webhook] faltando data.id (nem na query, nem no body)");
-    return false;
-  }
-
-  const manifest = `id:${String(dataId).toLowerCase()};request-id:${reqId};ts:${ts};`;
+  const manifest = `id:${dataId.toLowerCase()};request-id:${reqId};ts:${ts};`;
   const hashCalculado = createHmac("sha256", secret).update(manifest).digest("hex");
-  console.log("[mp-webhook] manifest:", manifest);
-  console.log("[mp-webhook] hash calculado:", hashCalculado, "| hash recebido:", v1);
 
   const bufCalculado = Buffer.from(hashCalculado, "hex");
   const bufRecebido = Buffer.from(v1, "hex");
-  if (bufCalculado.length !== bufRecebido.length) {
-    console.log("[mp-webhook] tamanhos de hash diferentes");
-    return false;
-  }
+  if (bufCalculado.length !== bufRecebido.length) return false;
 
   return timingSafeEqual(bufCalculado, bufRecebido);
 }
@@ -70,18 +48,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  if (!validarAssinatura(req, webhookSecret)) {
-    console.error("Assinatura do webhook do Mercado Pago inválida");
-    res.status(401).json({ error: "Assinatura inválida" });
-    return;
-  }
-
-  const tipo = req.body?.type;
-  const dataId = req.body?.data?.id;
+  const tipo = req.body?.type ?? req.body?.topic;
+  const dataId =
+    (typeof req.query["data.id"] === "string" ? req.query["data.id"] : undefined) ??
+    req.body?.data?.id ??
+    req.body?.resource;
 
   if (tipo !== "payment" || !dataId) {
     // Outros tipos de notificação (merchant_order, etc.) são reconhecidos mas ignorados.
     res.status(200).json({ ok: true });
+    return;
+  }
+
+  if (!validarAssinatura(req, webhookSecret, String(dataId))) {
+    console.error("Assinatura do webhook do Mercado Pago inválida");
+    res.status(401).json({ error: "Assinatura inválida" });
     return;
   }
 
