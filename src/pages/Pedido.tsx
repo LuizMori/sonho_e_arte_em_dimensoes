@@ -44,21 +44,15 @@ export function Pedido() {
   }, [orderId]);
 
   useEffect(() => {
-    if (searchParams.get("status") !== "approved") return;
+    if (order?.status !== "pending_payment") return;
 
-    let tentativas = 0;
-    const intervalo = setInterval(async () => {
-      tentativas += 1;
-      const pedido = await buscarPedido();
-      if (pedido?.status === "paid" || tentativas >= 6) {
-        clearInterval(intervalo);
-      }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, 2000);
+    const intervalo = setInterval(() => {
+      buscarPedido();
+    }, 4000);
 
     return () => clearInterval(intervalo);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, orderId]);
+  }, [order?.status, orderId]);
 
   const iniciarPagamento = async () => {
     if (!order) return;
@@ -77,13 +71,14 @@ export function Pedido() {
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error || "Não foi possível iniciar o pagamento");
 
-      window.location.href = data.initPoint;
+      window.open(data.initPoint, "_blank", "noopener,noreferrer");
     } catch (err) {
       showToast({
         title: "Não foi possível iniciar o pagamento",
         description: err instanceof Error ? err.message : undefined,
         variant: "error",
       });
+    } finally {
       setPagando(false);
     }
   };
@@ -146,8 +141,12 @@ export function Pedido() {
               </p>
             )}
             <Button onClick={iniciarPagamento} disabled={pagando} className="w-full sm:w-auto">
-              {pagando ? "Redirecionando..." : "Pagar agora"}
+              {pagando ? "Abrindo..." : "Pagar agora"}
             </Button>
+            <p className="text-sm text-navy/50 mt-4">
+              O pagamento abre em uma nova aba pelo Mercado Pago. Depois de pagar, pode voltar para esta
+              página — ela atualiza sozinha assim que a confirmação chegar.
+            </p>
           </Reveal>
         )}
 

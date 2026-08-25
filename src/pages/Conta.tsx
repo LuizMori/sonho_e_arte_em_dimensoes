@@ -1,9 +1,22 @@
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { Reveal } from "@/components/Reveal";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/lib/AuthProvider";
+import { supabase } from "@/lib/supabaseClient";
+import type { Order } from "@/types";
+
+const formatarMoeda = (valor: number) => valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+const statusLabel: Record<Order["status"], string> = {
+  pending_payment: "Aguardando pagamento",
+  paid: "Pago",
+  shipped: "Enviado",
+  cancelled: "Cancelado",
+  expired: "Expirado",
+};
 
 export function Conta() {
   usePageMeta(
@@ -14,6 +27,20 @@ export function Conta() {
   const { user, profile, signOut, resendConfirmation } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const [pedidos, setPedidos] = useState<Order[]>([]);
+  const [carregandoPedidos, setCarregandoPedidos] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false });
+      setPedidos((data as Order[]) ?? []);
+      setCarregandoPedidos(false);
+    })();
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -65,6 +92,32 @@ export function Conta() {
               </button>
             </div>
           )}
+
+          <div className="mt-14">
+            <p className="label-caps text-navy/70 mb-4">Meus pedidos</p>
+            {carregandoPedidos ? (
+              <p className="text-navy/60">Carregando...</p>
+            ) : pedidos.length === 0 ? (
+              <p className="text-navy/60">Você ainda não fez nenhum pedido.</p>
+            ) : (
+              <ul className="space-y-3">
+                {pedidos.map((pedido) => (
+                  <li key={pedido.id}>
+                    <Link
+                      to={`/pedido/${pedido.id}`}
+                      className="flex items-center justify-between gap-4 border border-neutral-light rounded-xl px-5 py-4 hover:border-magenta transition-colors"
+                    >
+                      <div>
+                        <p className="text-navy">Pedido #{pedido.id.slice(0, 8)}</p>
+                        <p className="text-sm text-navy/50 mt-1">{statusLabel[pedido.status]}</p>
+                      </div>
+                      <p className="text-navy shrink-0">{formatarMoeda(pedido.total)}</p>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
 
           <Button variant="outline" className="mt-10" onClick={handleSignOut}>
             Sair
