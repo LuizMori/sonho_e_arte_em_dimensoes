@@ -91,6 +91,14 @@ export function Cadastro() {
               {status === "loading" ? "Criando conta..." : "Criar conta"}
             </Button>
 
+            <p className="text-xs text-navy/50 text-center -mt-4">
+              Ao criar sua conta, você concorda com nossa{" "}
+              <Link to="/privacidade" className="text-navy hover:text-magenta transition-colors">
+                Política de Privacidade
+              </Link>
+              .
+            </p>
+
             <p className="text-sm text-center">
               <span className="text-navy/70">Já tem uma conta? </span>
               <Link to="/login" className="text-navy hover:text-magenta transition-colors">

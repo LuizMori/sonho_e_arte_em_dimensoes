@@ -16,6 +16,7 @@ const colunas = [
     links: [
       { to: "/orcamento", label: "Orçamento" },
       { to: "/contato", label: "Contato" },
+      { to: "/privacidade", label: "Privacidade" },
     ],
   },
 ];

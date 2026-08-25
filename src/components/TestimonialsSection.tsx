@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Star, Quote } from "lucide-react";
@@ -64,7 +65,7 @@ export function TestimonialsSection() {
     formState: { errors },
   } = useForm<DepoimentoFormData>({
     resolver: zodResolver(depoimentoSchema),
-    defaultValues: { nome: "", texto: "", nota: 0 },
+    defaultValues: { nome: "", texto: "", nota: 0, consentimento: false as unknown as true },
   });
 
   useEffect(() => {
@@ -95,7 +96,7 @@ export function TestimonialsSection() {
     }
 
     setEnviado(true);
-    reset({ nome: "", texto: "", nota: 0 });
+    reset({ nome: "", texto: "", nota: 0, consentimento: false as unknown as true });
     showToast({
       title: "Obrigado pelo depoimento!",
       description: "Ele será publicado assim que for aprovado.",
@@ -168,6 +169,20 @@ export function TestimonialsSection() {
                   )}
                 />
                 <FieldError message={errors.nota?.message} />
+              </div>
+
+              <div>
+                <label className="flex items-start gap-3 text-sm text-navy/70">
+                  <input type="checkbox" className="h-4 w-4 mt-0.5" {...register("consentimento")} />
+                  <span>
+                    Concordo que meu nome e depoimento sejam publicados neste site, conforme a{" "}
+                    <Link to="/privacidade" className="text-magenta hover:underline">
+                      Política de Privacidade
+                    </Link>
+                    .
+                  </span>
+                </label>
+                <FieldError message={errors.consentimento?.message} />
               </div>
 
               <Button type="submit" disabled={status === "loading"}>

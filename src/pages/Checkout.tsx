@@ -355,6 +355,13 @@ export function Checkout() {
                       ? "O pagamento ainda não está disponível diretamente pelo site — em breve você poderá pagar por aqui. Sua reserva de estoque fica garantida por 30 minutos."
                       : "Calcule o frete acima para finalizar o pedido."}
                   </p>
+                  <p className="text-xs text-navy/40 mt-2">
+                    Seus dados de entrega são usados apenas para processar este pedido, conforme nossa{" "}
+                    <Link to="/privacidade" className="text-navy/60 hover:text-magenta transition-colors">
+                      Política de Privacidade
+                    </Link>
+                    .
+                  </p>
                 </>
               )}
             </Reveal>

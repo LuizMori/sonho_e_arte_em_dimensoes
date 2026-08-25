@@ -91,6 +91,9 @@ export const depoimentoSchema = z.object({
   nome: z.string().trim().min(2, "Informe seu nome"),
   texto: z.string().trim().min(10, "Escreva um depoimento com pelo menos 10 caracteres"),
   nota: z.coerce.number().int().min(1, "Selecione uma nota").max(5, "A nota máxima é 5"),
+  consentimento: z.literal(true, {
+    errorMap: () => ({ message: "É necessário concordar com a publicação para enviar" }),
+  }),
 });
 
 export type DepoimentoFormData = z.infer<typeof depoimentoSchema>;

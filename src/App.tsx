@@ -15,6 +15,7 @@ import { Servicos } from "@/pages/Servicos";
 import { ComoFunciona } from "@/pages/ComoFunciona";
 import { Orcamento } from "@/pages/Orcamento";
 import { Contato } from "@/pages/Contato";
+import { Privacidade } from "@/pages/Privacidade";
 import { Login } from "@/pages/Login";
 import { Cadastro } from "@/pages/Cadastro";
 import { EsqueciSenha } from "@/pages/EsqueciSenha";
@@ -49,6 +50,7 @@ function App() {
             <Route path="/como-funciona" element={<ComoFunciona />} />
             <Route path="/orcamento" element={<Orcamento />} />
             <Route path="/contato" element={<Contato />} />
+            <Route path="/privacidade" element={<Privacidade />} />
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Cadastro />} />
             <Route path="/esqueci-senha" element={<EsqueciSenha />} />
