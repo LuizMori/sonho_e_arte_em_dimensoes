@@ -4,7 +4,10 @@ import { usePageMeta } from "@/lib/usePageMeta";
 import { Reveal } from "@/components/Reveal";
 import { Gallery } from "@/components/Gallery";
 import { Button } from "@/components/ui/Button";
+import { Label } from "@/components/ui/Input";
+import { useToast } from "@/components/ui/Toast";
 import { supabase } from "@/lib/supabaseClient";
+import { useCart } from "@/lib/CartProvider";
 import { categorias } from "@/data/categorias";
 import type { ProdutoComImagens } from "@/types";
 
@@ -12,6 +15,9 @@ export function ProjectDetail() {
   const { slug } = useParams<{ slug: string }>();
   const [produto, setProduto] = useState<ProdutoComImagens | null | undefined>(undefined);
   const [proximo, setProximo] = useState<{ slug: string; nome: string } | null>(null);
+  const [quantidade, setQuantidade] = useState(1);
+  const { addItem } = useCart();
+  const { showToast } = useToast();
 
   useEffect(() => {
     setProduto(undefined);
@@ -117,6 +123,36 @@ export function ProjectDetail() {
                   <dd className="text-navy text-lg mt-1">{item.valor}</dd>
                 </div>
               ))}
+
+              {produto.stock > 0 ? (
+                <div className="pt-2">
+                  <div className="flex items-center gap-4 mb-4">
+                    <Label htmlFor="quantidade">Quantidade</Label>
+                    <input
+                      id="quantidade"
+                      type="number"
+                      min={1}
+                      max={produto.stock}
+                      value={quantidade}
+                      onChange={(e) =>
+                        setQuantidade(Math.max(1, Math.min(Number(e.target.value), produto.stock)))
+                      }
+                      className="w-16 bg-transparent border-b border-neutral-light py-1 text-navy focus:outline-none focus:border-magenta"
+                    />
+                  </div>
+                  <Button
+                    className="w-full"
+                    onClick={() => {
+                      addItem(produto.id, quantidade);
+                      showToast({ title: "Adicionado ao carrinho", description: produto.nome, variant: "success" });
+                    }}
+                  >
+                    Adicionar ao carrinho
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-navy/60 pt-2">Sem estoque no momento.</p>
+              )}
             </dl>
           </Reveal>
 

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, ShoppingBag, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/AuthProvider";
+import { useCart } from "@/lib/CartProvider";
 
 const navLinks = [
   { to: "/", label: "Início" },
@@ -18,6 +19,7 @@ export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const { user, profile, signOut } = useAuth();
+  const { count } = useCart();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -105,13 +107,24 @@ export function Header() {
           </div>
         </div>
 
-        <button
-          aria-label={open ? "Fechar menu" : "Abrir menu"}
-          className="lg:hidden text-navy"
-          onClick={() => setOpen((v) => !v)}
-        >
-          {open ? <X size={26} /> : <Menu size={26} />}
-        </button>
+        <div className="flex items-center gap-5">
+          <Link to="/carrinho" aria-label="Carrinho" className="relative text-navy hover:text-magenta transition-colors" onClick={() => setOpen(false)}>
+            <ShoppingBag size={22} />
+            {count > 0 && (
+              <span className="absolute -top-2 -right-2 flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-magenta text-cream-light text-[10px] leading-none">
+                {count}
+              </span>
+            )}
+          </Link>
+
+          <button
+            aria-label={open ? "Fechar menu" : "Abrir menu"}
+            className="lg:hidden text-navy"
+            onClick={() => setOpen((v) => !v)}
+          >
+            {open ? <X size={26} /> : <Menu size={26} />}
+          </button>
+        </div>
       </div>
 
       {open && (

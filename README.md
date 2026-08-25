@@ -49,6 +49,14 @@ Vercel > Settings > Environment Variables (e em `.env.local` para rodar localmen
 O schema do banco (tabelas, triggers, RLS) fica versionado em [`supabase/migrations`](supabase/migrations),
 com instruções de como aplicar em [`supabase/README.md`](supabase/README.md).
 
+O carrinho de compras roda no cliente (localStorage) e a cotação de frete usa a API do
+[Melhor Envio](https://melhorenvio.com.br) através da função serverless `api/shipping/quote.ts` (o token
+nunca fica exposto no frontend). Configure em Vercel > Settings > Environment Variables:
+
+- `MELHOR_ENVIO_TOKEN`: token de acesso pessoal gerado no painel do Melhor Envio.
+- `CEP_ORIGEM`: CEP de origem dos envios (endereço do estúdio), sem traço.
+- `MELHOR_ENVIO_API_URL` (opcional): use a URL de sandbox durante testes.
+
 ## Stack
 
 - React + Vite + TypeScript

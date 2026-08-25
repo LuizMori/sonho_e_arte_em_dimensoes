@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AuthProvider } from "@/lib/AuthProvider";
+import { CartProvider } from "@/lib/CartProvider";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { Layout } from "@/components/Layout";
 import { RequireAuth } from "@/components/RequireAuth";
@@ -20,6 +21,8 @@ import { Cadastro } from "@/pages/Cadastro";
 import { EsqueciSenha } from "@/pages/EsqueciSenha";
 import { RedefinirSenha } from "@/pages/RedefinirSenha";
 import { Conta } from "@/pages/Conta";
+import { Carrinho } from "@/pages/Carrinho";
+import { Checkout } from "@/pages/Checkout";
 import { AdminProdutos } from "@/pages/admin/AdminProdutos";
 import { AdminProdutoForm } from "@/pages/admin/AdminProdutoForm";
 import { NotFound } from "@/pages/NotFound";
@@ -27,6 +30,7 @@ import { NotFound } from "@/pages/NotFound";
 function App() {
   return (
     <AuthProvider>
+      <CartProvider>
       <ToastProvider>
         <ScrollToTop />
         <Layout>
@@ -45,6 +49,8 @@ function App() {
             <Route path="/cadastro" element={<Cadastro />} />
             <Route path="/esqueci-senha" element={<EsqueciSenha />} />
             <Route path="/redefinir-senha" element={<RedefinirSenha />} />
+            <Route path="/carrinho" element={<Carrinho />} />
+            <Route path="/checkout" element={<Checkout />} />
             <Route
               path="/conta"
               element={
@@ -81,6 +87,7 @@ function App() {
           </Routes>
         </Layout>
       </ToastProvider>
+      </CartProvider>
     </AuthProvider>
   );
 }
