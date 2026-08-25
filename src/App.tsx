@@ -29,6 +29,7 @@ import { AdminPedidos } from "@/pages/admin/AdminPedidos";
 import { AdminBalanco } from "@/pages/admin/AdminBalanco";
 import { AdminDepoimentos } from "@/pages/admin/AdminDepoimentos";
 import { AdminVisitas } from "@/pages/admin/AdminVisitas";
+import { AdminUsuarios } from "@/pages/admin/AdminUsuarios";
 import { NotFound } from "@/pages/NotFound";
 
 function App() {
@@ -123,6 +124,14 @@ function App() {
               element={
                 <RequireAdmin>
                   <AdminVisitas />
+                </RequireAdmin>
+              }
+            />
+            <Route
+              path="/admin/usuarios"
+              element={
+                <RequireAdmin>
+                  <AdminUsuarios />
                 </RequireAdmin>
               }
             />

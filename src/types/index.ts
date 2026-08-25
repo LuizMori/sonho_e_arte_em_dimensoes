@@ -46,6 +46,7 @@ export type UserRole = "customer" | "admin";
 export interface Profile {
   id: string;
   nome: string | null;
+  email: string | null;
   role: UserRole;
   created_at: string;
 }

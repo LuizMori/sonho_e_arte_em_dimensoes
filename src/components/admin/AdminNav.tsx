@@ -7,6 +7,7 @@ const links = [
   { to: "/admin/balanco", label: "Balanço" },
   { to: "/admin/depoimentos", label: "Depoimentos" },
   { to: "/admin/visitas", label: "Visitas" },
+  { to: "/admin/usuarios", label: "Usuários" },
 ];
 
 export function AdminNav() {

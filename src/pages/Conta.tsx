@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { Reveal } from "@/components/Reveal";
+import { Input, Label, FieldError } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
+import { resetPasswordSchema, type ResetPasswordFormData } from "@/lib/schemas";
 import type { Order } from "@/types";
 
 const formatarMoeda = (valor: number) => valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -24,11 +28,20 @@ export function Conta() {
     "Gerencie sua conta na Sonho e Arte em Dimensões."
   );
 
-  const { user, profile, signOut, resendConfirmation } = useAuth();
+  const { user, profile, signOut, resendConfirmation, updatePassword } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [pedidos, setPedidos] = useState<Order[]>([]);
   const [carregandoPedidos, setCarregandoPedidos] = useState(true);
+  const [mudandoSenha, setMudandoSenha] = useState(false);
+  const [statusSenha, setStatusSenha] = useState<"idle" | "loading">("idle");
+
+  const {
+    register: registerSenha,
+    handleSubmit: handleSubmitSenha,
+    reset: resetSenha,
+    formState: { errors: erroSenha },
+  } = useForm<ResetPasswordFormData>({ resolver: zodResolver(resetPasswordSchema) });
 
   useEffect(() => {
     if (!user) return;
@@ -79,6 +92,59 @@ export function Conta() {
               <dd className="text-navy mt-1">{user?.email}</dd>
             </div>
           </dl>
+
+          <div className="mt-8">
+            {mudandoSenha ? (
+              <form
+                onSubmit={handleSubmitSenha(async (data) => {
+                  setStatusSenha("loading");
+                  const { error } = await updatePassword(data.senha);
+                  setStatusSenha("idle");
+
+                  if (error) {
+                    showToast({ title: "Não foi possível mudar a senha", description: error, variant: "error" });
+                    return;
+                  }
+
+                  showToast({ title: "Senha atualizada", variant: "success" });
+                  resetSenha();
+                  setMudandoSenha(false);
+                })}
+                className="space-y-6"
+                noValidate
+              >
+                <div>
+                  <Label htmlFor="senha">Nova senha</Label>
+                  <Input id="senha" type="password" {...registerSenha("senha")} />
+                  <FieldError message={erroSenha.senha?.message} />
+                </div>
+                <div>
+                  <Label htmlFor="confirmarSenha">Confirmar nova senha</Label>
+                  <Input id="confirmarSenha" type="password" {...registerSenha("confirmarSenha")} />
+                  <FieldError message={erroSenha.confirmarSenha?.message} />
+                </div>
+                <div className="flex items-center gap-6">
+                  <Button type="submit" disabled={statusSenha === "loading"}>
+                    {statusSenha === "loading" ? "Salvando..." : "Salvar nova senha"}
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMudandoSenha(false);
+                      resetSenha();
+                    }}
+                    className="text-sm text-navy/60 hover:text-navy"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <button onClick={() => setMudandoSenha(true)} className="text-sm text-magenta hover:underline">
+                Quero mudar minha senha
+              </button>
+            )}
+          </div>
 
           {!emailConfirmado && (
             <div className="mt-8 rounded-xl border border-magenta px-5 py-4">
