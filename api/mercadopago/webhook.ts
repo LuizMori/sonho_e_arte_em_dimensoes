@@ -8,7 +8,15 @@ function validarAssinatura(req: VercelRequest, secret: string): boolean {
   const signature = Array.isArray(signatureHeader) ? signatureHeader[0] : signatureHeader;
   const reqId = Array.isArray(requestId) ? requestId[0] : requestId;
 
-  if (!signature || !reqId) return false;
+  console.log("[mp-webhook] x-signature recebido:", signature);
+  console.log("[mp-webhook] x-request-id recebido:", reqId);
+  console.log("[mp-webhook] query:", JSON.stringify(req.query));
+  console.log("[mp-webhook] body:", JSON.stringify(req.body));
+
+  if (!signature || !reqId) {
+    console.log("[mp-webhook] faltando signature ou request-id");
+    return false;
+  }
 
   const partes = Object.fromEntries(
     signature.split(",").map((parte) => {
@@ -19,17 +27,28 @@ function validarAssinatura(req: VercelRequest, secret: string): boolean {
 
   const ts = partes.ts;
   const v1 = partes.v1;
-  if (!ts || !v1) return false;
+  if (!ts || !v1) {
+    console.log("[mp-webhook] faltando ts ou v1 no header de assinatura");
+    return false;
+  }
 
   const dataId = typeof req.query["data.id"] === "string" ? req.query["data.id"] : req.body?.data?.id;
-  if (!dataId) return false;
+  if (!dataId) {
+    console.log("[mp-webhook] faltando data.id (nem na query, nem no body)");
+    return false;
+  }
 
   const manifest = `id:${String(dataId).toLowerCase()};request-id:${reqId};ts:${ts};`;
   const hashCalculado = createHmac("sha256", secret).update(manifest).digest("hex");
+  console.log("[mp-webhook] manifest:", manifest);
+  console.log("[mp-webhook] hash calculado:", hashCalculado, "| hash recebido:", v1);
 
   const bufCalculado = Buffer.from(hashCalculado, "hex");
   const bufRecebido = Buffer.from(v1, "hex");
-  if (bufCalculado.length !== bufRecebido.length) return false;
+  if (bufCalculado.length !== bufRecebido.length) {
+    console.log("[mp-webhook] tamanhos de hash diferentes");
+    return false;
+  }
 
   return timingSafeEqual(bufCalculado, bufRecebido);
 }
