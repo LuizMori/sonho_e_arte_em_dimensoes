@@ -20,6 +20,9 @@ interface MelhorEnvioOpcao {
   error?: string;
 }
 
+// Só as transportadoras que o estúdio realmente consegue atender no local de coleta.
+const TRANSPORTADORAS_PERMITIDAS = ["correios", "jadlog", "loggi"];
+
 interface OpcaoFrete {
   id: string;
   nome: string;
@@ -75,6 +78,9 @@ async function cotarFrete(cepOrigem: string, cepDestino: string, itens: ItemFret
 
   return data
     .filter((opcao) => !opcao.error && opcao.price)
+    .filter((opcao) =>
+      TRANSPORTADORAS_PERMITIDAS.some((nome) => opcao.company?.name?.toLowerCase().includes(nome))
+    )
     .map((opcao) => ({
       id: String(opcao.id),
       nome: opcao.name,
