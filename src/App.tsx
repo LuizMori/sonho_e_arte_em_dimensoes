@@ -3,6 +3,7 @@ import { ToastProvider } from "@/components/ui/Toast";
 import { AuthProvider } from "@/lib/AuthProvider";
 import { CartProvider } from "@/lib/CartProvider";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { PageViewTracker } from "@/components/PageViewTracker";
 import { Layout } from "@/components/Layout";
 import { RequireAuth } from "@/components/RequireAuth";
 import { RequireAdmin } from "@/components/RequireAdmin";
@@ -27,6 +28,7 @@ import { AdminProdutoForm } from "@/pages/admin/AdminProdutoForm";
 import { AdminPedidos } from "@/pages/admin/AdminPedidos";
 import { AdminBalanco } from "@/pages/admin/AdminBalanco";
 import { AdminDepoimentos } from "@/pages/admin/AdminDepoimentos";
+import { AdminVisitas } from "@/pages/admin/AdminVisitas";
 import { NotFound } from "@/pages/NotFound";
 
 function App() {
@@ -35,6 +37,7 @@ function App() {
       <CartProvider>
       <ToastProvider>
         <ScrollToTop />
+        <PageViewTracker />
         <Layout>
           <Routes>
             <Route path="/" element={<Home />} />
@@ -112,6 +115,14 @@ function App() {
               element={
                 <RequireAdmin>
                   <AdminDepoimentos />
+                </RequireAdmin>
+              }
+            />
+            <Route
+              path="/admin/visitas"
+              element={
+                <RequireAdmin>
+                  <AdminVisitas />
                 </RequireAdmin>
               }
             />

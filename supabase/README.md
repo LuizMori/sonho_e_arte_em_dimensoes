@@ -25,6 +25,9 @@ com a CLI é uma opção futura.
    publicados pelo admin) e RLS que só libera leitura pública para linhas aprovadas. Antes ou depois de
    rodar este arquivo, crie o bucket `testimonial-images` em Storage > New bucket, marcado como
    **público**.
+7. `0007_visitas.sql` — tabela `page_views`, um contador de visitas próprio (sem serviço externo):
+   qualquer visitante pode registrar uma visualização, só o admin pode ler os dados. Sem pré-requisito
+   manual.
 
 Depois de rodar a migração 1 e o dono da loja se cadastrar pelo fluxo normal (`/cadastro`), promova a
 conta a admin rodando no SQL Editor:

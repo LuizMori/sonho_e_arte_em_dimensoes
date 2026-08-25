@@ -1,0 +1,171 @@
+import { useEffect, useMemo, useState } from "react";
+import { usePageMeta } from "@/lib/usePageMeta";
+import { Reveal } from "@/components/Reveal";
+import { AdminNav } from "@/components/admin/AdminNav";
+import { supabase } from "@/lib/supabaseClient";
+import type { PageView } from "@/types";
+
+const DIAS_JANELA = 30;
+const DIAS_EXIBIDOS = 14;
+
+const formatarDataChave = (data: Date) => data.toISOString().slice(0, 10);
+
+const formatarDataLabel = (chave: string) =>
+  new Date(`${chave}T12:00:00`).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+
+interface DiaAgregado {
+  chave: string;
+  visualizacoes: number;
+  visitantes: number;
+}
+
+export function AdminVisitas() {
+  usePageMeta("Visitas | Admin | Sonho e Arte em Dimensões", "Acompanhe as visitas diárias ao site.");
+
+  const [visitas, setVisitas] = useState<PageView[]>([]);
+  const [carregando, setCarregando] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const desde = new Date();
+      desde.setDate(desde.getDate() - DIAS_JANELA);
+      const { data } = await supabase
+        .from("page_views")
+        .select("*")
+        .gte("created_at", desde.toISOString())
+        .order("created_at", { ascending: true });
+      setVisitas((data as PageView[]) ?? []);
+      setCarregando(false);
+    })();
+  }, []);
+
+  const porDia = useMemo(() => {
+    const mapa = new Map<string, { visualizacoes: number; sessoes: Set<string> }>();
+    for (const visita of visitas) {
+      const chave = formatarDataChave(new Date(visita.created_at));
+      const entrada = mapa.get(chave) ?? { visualizacoes: 0, sessoes: new Set<string>() };
+      entrada.visualizacoes += 1;
+      entrada.sessoes.add(visita.session_id);
+      mapa.set(chave, entrada);
+    }
+
+    const dias: DiaAgregado[] = [];
+    for (let i = DIAS_EXIBIDOS - 1; i >= 0; i--) {
+      const data = new Date();
+      data.setDate(data.getDate() - i);
+      const chave = formatarDataChave(data);
+      const entrada = mapa.get(chave);
+      dias.push({
+        chave,
+        visualizacoes: entrada?.visualizacoes ?? 0,
+        visitantes: entrada?.sessoes.size ?? 0,
+      });
+    }
+    return dias;
+  }, [visitas]);
+
+  const resumo = useMemo(() => {
+    const hojeChave = formatarDataChave(new Date());
+    const seteDiasAtras = new Date();
+    seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
+
+    const hoje = visitas.filter((v) => formatarDataChave(new Date(v.created_at)) === hojeChave);
+    const ultimos7 = visitas.filter((v) => new Date(v.created_at) >= seteDiasAtras);
+
+    return {
+      hoje: hoje.length,
+      visitantesHoje: new Set(hoje.map((v) => v.session_id)).size,
+      ultimos7: ultimos7.length,
+      ultimos30: visitas.length,
+    };
+  }, [visitas]);
+
+  const paginasMaisVisitadas = useMemo(() => {
+    const mapa = new Map<string, number>();
+    for (const visita of visitas) {
+      mapa.set(visita.path, (mapa.get(visita.path) ?? 0) + 1);
+    }
+    return [...mapa.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+  }, [visitas]);
+
+  const maxVisualizacoes = Math.max(1, ...porDia.map((d) => d.visualizacoes));
+
+  return (
+    <section className="pt-40 pb-24 md:pt-48 md:pb-32">
+      <div className="container max-w-3xl">
+        <Reveal className="mb-12">
+          <p className="label-caps text-magenta mb-6">Painel admin</p>
+          <h1 className="font-display text-5xl sm:text-6xl tracking-tightest text-navy leading-[1.05]">
+            Visitas
+          </h1>
+          <p className="text-sm text-navy/50 mt-4">
+            Contador próprio de visualizações de página, sem cookies persistentes. Não conta acessos ao
+            painel admin.
+          </p>
+        </Reveal>
+
+        <AdminNav />
+
+        {carregando ? (
+          <p className="text-navy/60">Carregando...</p>
+        ) : (
+          <>
+            <Reveal className="grid grid-cols-2 sm:grid-cols-3 gap-6 mb-16">
+              <div className="border border-neutral-light rounded-xl px-5 py-4">
+                <p className="label-caps text-navy/50">Hoje</p>
+                <p className="font-display text-3xl text-navy mt-2">{resumo.hoje}</p>
+                <p className="text-navy/50 text-xs mt-1">{resumo.visitantesHoje} visitantes</p>
+              </div>
+              <div className="border border-neutral-light rounded-xl px-5 py-4">
+                <p className="label-caps text-navy/50">Últimos 7 dias</p>
+                <p className="font-display text-3xl text-navy mt-2">{resumo.ultimos7}</p>
+              </div>
+              <div className="border border-neutral-light rounded-xl px-5 py-4">
+                <p className="label-caps text-navy/50">Últimos 30 dias</p>
+                <p className="font-display text-3xl text-navy mt-2">{resumo.ultimos30}</p>
+              </div>
+            </Reveal>
+
+            <Reveal className="mb-16">
+              <p className="label-caps text-navy/70 mb-6">Últimos {DIAS_EXIBIDOS} dias</p>
+              <div className="space-y-2">
+                {porDia.map((dia) => (
+                  <div key={dia.chave} className="flex items-center gap-4">
+                    <span className="text-navy/50 text-xs w-10 shrink-0">{formatarDataLabel(dia.chave)}</span>
+                    <div className="flex-1 bg-neutral-light/40 rounded-full h-3 overflow-hidden">
+                      <div
+                        className="bg-orange h-full rounded-full transition-all"
+                        style={{ width: `${(dia.visualizacoes / maxVisualizacoes) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-navy text-sm w-24 shrink-0 text-right">
+                      {dia.visualizacoes} views · {dia.visitantes}v
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </Reveal>
+
+            <Reveal>
+              <p className="label-caps text-navy/70 mb-4">Páginas mais visitadas (30 dias)</p>
+              {paginasMaisVisitadas.length === 0 ? (
+                <p className="text-navy/50 text-sm">Nenhuma visita registrada ainda.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {paginasMaisVisitadas.map(([path, total]) => (
+                    <li key={path} className="flex items-center justify-between border-b border-neutral-light/60 pb-2">
+                      <span className="text-navy/80 text-sm">{path}</span>
+                      <span className="text-navy text-sm shrink-0">{total}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Reveal>
+          </>
+        )}
+      </div>
+    </section>
+  );
+}

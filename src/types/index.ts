@@ -117,6 +117,13 @@ export interface OrderComRelacoes extends Order {
 
 export type TestimonialTipo = "texto" | "print";
 
+export interface PageView {
+  id: string;
+  path: string;
+  session_id: string;
+  created_at: string;
+}
+
 export interface Testimonial {
   id: string;
   tipo: TestimonialTipo;
