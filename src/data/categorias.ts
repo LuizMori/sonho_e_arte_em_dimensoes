@@ -5,4 +5,5 @@ export const categorias: Categoria[] = [
   { slug: "personalizados", nome: "Personalizados" },
   { slug: "miniaturas", nome: "Miniaturas" },
   { slug: "colecionaveis", nome: "Colecionáveis" },
+  { slug: "geek", nome: "Geek" },
 ];

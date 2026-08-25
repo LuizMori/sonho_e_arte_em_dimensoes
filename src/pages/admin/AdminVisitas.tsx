@@ -3,9 +3,15 @@ import { usePageMeta } from "@/lib/usePageMeta";
 import { Reveal } from "@/components/Reveal";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { supabase } from "@/lib/supabaseClient";
-import type { PageView } from "@/types";
+import { categorias } from "@/data/categorias";
+import type { CategoriaSlug, PageView } from "@/types";
 
 const PREFIXO_PRODUTO = "/portfolio/";
+
+interface ProdutoResumo {
+  nome: string;
+  categoria: CategoriaSlug;
+}
 
 const DIAS_JANELA = 30;
 const DIAS_EXIBIDOS = 14;
@@ -25,8 +31,9 @@ export function AdminVisitas() {
   usePageMeta("Visitas | Admin | Sonho e Arte em Dimensões", "Acompanhe as visitas diárias ao site.");
 
   const [visitas, setVisitas] = useState<PageView[]>([]);
-  const [nomesPorSlug, setNomesPorSlug] = useState<Map<string, string>>(new Map());
+  const [produtosPorSlug, setProdutosPorSlug] = useState<Map<string, ProdutoResumo>>(new Map());
   const [carregando, setCarregando] = useState(true);
+  const [filtroCategoria, setFiltroCategoria] = useState<CategoriaSlug | "todos">("todos");
 
   useEffect(() => {
     (async () => {
@@ -38,10 +45,12 @@ export function AdminVisitas() {
           .select("*")
           .gte("created_at", desde.toISOString())
           .order("created_at", { ascending: true }),
-        supabase.from("products").select("nome, slug"),
+        supabase.from("products").select("nome, slug, categoria"),
       ]);
       setVisitas((views as PageView[]) ?? []);
-      setNomesPorSlug(new Map((produtos ?? []).map((p) => [p.slug, p.nome])));
+      setProdutosPorSlug(
+        new Map((produtos ?? []).map((p) => [p.slug, { nome: p.nome, categoria: p.categoria }]))
+      );
       setCarregando(false);
     })();
   }, []);
@@ -92,13 +101,14 @@ export function AdminVisitas() {
     for (const visita of visitas) {
       if (!visita.path.startsWith(PREFIXO_PRODUTO)) continue;
       const slug = visita.path.slice(PREFIXO_PRODUTO.length);
+      if (filtroCategoria !== "todos" && produtosPorSlug.get(slug)?.categoria !== filtroCategoria) continue;
       mapa.set(slug, (mapa.get(slug) ?? 0) + 1);
     }
     return [...mapa.entries()]
-      .map(([slug, total]) => ({ nome: nomesPorSlug.get(slug) ?? slug, total }))
+      .map(([slug, total]) => ({ nome: produtosPorSlug.get(slug)?.nome ?? slug, total }))
       .sort((a, b) => b.total - a.total)
       .slice(0, 8);
-  }, [visitas, nomesPorSlug]);
+  }, [visitas, produtosPorSlug, filtroCategoria]);
 
   const paginasMaisVisitadas = useMemo(() => {
     const mapa = new Map<string, number>();
@@ -170,7 +180,21 @@ export function AdminVisitas() {
             </Reveal>
 
             <Reveal className="mb-16">
-              <p className="label-caps text-navy/70 mb-4">Produtos mais buscados (30 dias)</p>
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+                <p className="label-caps text-navy/70">Produtos mais buscados (30 dias)</p>
+                <select
+                  value={filtroCategoria}
+                  onChange={(e) => setFiltroCategoria(e.target.value as CategoriaSlug | "todos")}
+                  className="label-caps bg-transparent border-b border-neutral-light py-1 text-navy text-xs focus:outline-none focus:border-magenta"
+                >
+                  <option value="todos">Todos</option>
+                  {categorias.map((categoria) => (
+                    <option key={categoria.slug} value={categoria.slug}>
+                      {categoria.nome}
+                    </option>
+                  ))}
+                </select>
+              </div>
               {produtosMaisVistos.length === 0 ? (
                 <p className="text-navy/50 text-sm">Nenhuma visita a produtos registrada ainda.</p>
               ) : (

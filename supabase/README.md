@@ -32,6 +32,7 @@ com a CLI é uma opção futura.
    violação de FK em `order_items`). Adiciona `nome_produto` como snapshot em `order_items` (mesmo padrão
    de `preco_unitario`) e ajusta a FK para `on delete set null`, preservando o histórico de pedidos mesmo
    depois do produto ser excluído do catálogo.
+9. `0009_categoria_geek.sql` — adiciona a categoria `geek` ao check constraint de `products.categoria`.
 
 Depois de rodar a migração 1 e o dono da loja se cadastrar pelo fluxo normal (`/cadastro`), promova a
 conta a admin rodando no SQL Editor:

@@ -2,7 +2,8 @@ export type CategoriaSlug =
   | "decoracao"
   | "personalizados"
   | "miniaturas"
-  | "colecionaveis";
+  | "colecionaveis"
+  | "geek";
 
 export interface Categoria {
   slug: CategoriaSlug;
