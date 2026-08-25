@@ -48,9 +48,9 @@ export function Header() {
       )}
     >
       <div className="container flex items-center justify-between h-20">
-        <Link to="/" className="flex items-center gap-2 font-display text-xl tracking-tightest text-navy" onClick={() => setOpen(false)}>
-          <span className="hidden sm:inline">Sonho e Arte</span>
-          <span className="sm:hidden">S&A</span>
+        <Link to="/" className="flex items-center font-display text-xl tracking-tightest text-navy" onClick={() => setOpen(false)}>
+          <span className="hidden sm:inline">Sonho e Arte&nbsp;</span>
+          <span className="sm:hidden">S&A&nbsp;</span>
           <span className="text-orange font-normal">em Dimensões</span>
         </Link>
 

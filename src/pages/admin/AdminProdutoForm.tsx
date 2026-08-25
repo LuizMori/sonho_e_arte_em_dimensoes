@@ -173,6 +173,12 @@ export function AdminProdutoForm() {
             {editando ? "Editar produto" : "Novo produto"}
           </h1>
 
+          {!editando && (
+            <p className="text-sm text-navy/50 mt-4">
+              Depois de criar o produto, você poderá adicionar fotos aqui mesmo.
+            </p>
+          )}
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 mt-14" noValidate>
             <div>
               <Label htmlFor="nome">Nome</Label>
