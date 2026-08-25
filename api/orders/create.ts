@@ -69,7 +69,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(200).json({ orderId });
   } catch (err) {
     console.error("Erro ao criar pedido:", err);
-    const message = err instanceof Error ? err.message : "Não foi possível criar o pedido";
+    const message =
+      err && typeof err === "object" && "message" in err && typeof err.message === "string"
+        ? err.message
+        : "Não foi possível criar o pedido";
     res.status(409).json({ error: message });
   }
 }
