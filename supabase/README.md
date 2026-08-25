@@ -15,6 +15,10 @@ com a CLI é uma opção futura.
    (leitura pública das fotos dos produtos).
 3. `0003_products_categoria.sql` — adiciona `categoria` e `destaque` a `products` (a página de Portfólio
    passou a ser 100% alimentada pelos produtos cadastrados pelo admin, sem dados fixos).
+4. `0004_orders.sql` — tabelas `orders`/`order_items`/`stock_reservations`, função `criar_pedido`
+   (cria o pedido e reserva o estoque de forma atômica) e `expirar_reservas_vencidas`, agendada via
+   `pg_cron` para rodar a cada 2 minutos. **Pré-requisito:** a extensão `pg_cron` precisa estar habilitada
+   em Database > Extensions antes de rodar este arquivo.
 
 Depois de rodar a migração 1 e o dono da loja se cadastrar pelo fluxo normal (`/cadastro`), promova a
 conta a admin rodando no SQL Editor:

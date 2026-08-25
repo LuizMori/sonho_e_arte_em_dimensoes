@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { Reveal } from "@/components/Reveal";
 import { Button } from "@/components/ui/Button";
 import { Input, Label, FieldError } from "@/components/ui/Input";
+import { useToast } from "@/components/ui/Toast";
 import { useCart } from "@/lib/CartProvider";
+import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import type { Produto } from "@/types";
 
@@ -22,9 +24,13 @@ const formatarMoeda = (valor: number) => valor.toLocaleString("pt-BR", { style: 
 export function Checkout() {
   usePageMeta("Checkout | Sonho e Arte em Dimensões", "Calcule o frete e revise seu pedido.");
 
-  const { items } = useCart();
+  const { items, clear } = useCart();
+  const { user } = useAuth();
+  const { showToast } = useToast();
+  const navigate = useNavigate();
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const [finalizando, setFinalizando] = useState(false);
 
   const [cep, setCep] = useState("");
   const [cepErro, setCepErro] = useState<string | undefined>();
@@ -99,6 +105,41 @@ export function Checkout() {
       setErroFrete("Não foi possível calcular o frete no momento. Tente novamente em instantes.");
     } finally {
       setCalculando(false);
+    }
+  };
+
+  const finalizarPedido = async () => {
+    if (!frete) return;
+    setFinalizando(true);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const response = await fetch("/api/orders/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
+        body: JSON.stringify({
+          itens: items.map((item) => ({ productId: item.productId, quantidade: item.quantidade })),
+          cepDestino: cep.replace(/\D/g, ""),
+          freteValor: frete.valor,
+          freteNome: `${frete.transportadora} - ${frete.nome}`,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.error || "Não foi possível criar o pedido");
+
+      clear();
+      navigate(`/pedido/${data.orderId}`);
+    } catch (err) {
+      showToast({
+        title: "Não foi possível finalizar o pedido",
+        description: err instanceof Error ? err.message : undefined,
+        variant: "error",
+      });
+    } finally {
+      setFinalizando(false);
     }
   };
 
@@ -192,17 +233,31 @@ export function Checkout() {
             </Reveal>
 
             <Reveal delay={180} className="mt-10">
-              <Button disabled className="w-full sm:w-auto">
-                Finalizar pedido (em breve)
-              </Button>
-              <p className="text-sm text-navy/50 mt-4">
-                O pagamento ainda não está disponível — em breve você poderá concluir a compra por aqui.
-                Para comprar agora,{" "}
-                <Link to="/contato" className="text-magenta">
-                  fale com a gente
-                </Link>
-                .
-              </p>
+              {!user ? (
+                <>
+                  <Link to="/login" state={{ from: { pathname: "/checkout" } }}>
+                    <Button className="w-full sm:w-auto">Fazer login para finalizar</Button>
+                  </Link>
+                  <p className="text-sm text-navy/50 mt-4">
+                    Você precisa estar logado para finalizar o pedido. Seu carrinho fica salvo.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <Button
+                    onClick={finalizarPedido}
+                    disabled={!frete || finalizando}
+                    className="w-full sm:w-auto"
+                  >
+                    {finalizando ? "Finalizando..." : "Finalizar pedido"}
+                  </Button>
+                  <p className="text-sm text-navy/50 mt-4">
+                    {frete
+                      ? "O pagamento ainda não está disponível diretamente pelo site — em breve você poderá pagar por aqui. Sua reserva de estoque fica garantida por 30 minutos."
+                      : "Calcule o frete acima para finalizar o pedido."}
+                  </p>
+                </>
+              )}
             </Reveal>
           </>
         )}

@@ -23,6 +23,7 @@ import { RedefinirSenha } from "@/pages/RedefinirSenha";
 import { Conta } from "@/pages/Conta";
 import { Carrinho } from "@/pages/Carrinho";
 import { Checkout } from "@/pages/Checkout";
+import { Pedido } from "@/pages/Pedido";
 import { AdminProdutos } from "@/pages/admin/AdminProdutos";
 import { AdminProdutoForm } from "@/pages/admin/AdminProdutoForm";
 import { NotFound } from "@/pages/NotFound";
@@ -51,6 +52,14 @@ function App() {
             <Route path="/redefinir-senha" element={<RedefinirSenha />} />
             <Route path="/carrinho" element={<Carrinho />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route
+              path="/pedido/:orderId"
+              element={
+                <RequireAuth>
+                  <Pedido />
+                </RequireAuth>
+              }
+            />
             <Route
               path="/conta"
               element={

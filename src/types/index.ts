@@ -89,3 +89,34 @@ export interface Produto {
 export interface ProdutoComImagens extends Produto {
   product_images: ProdutoImagemDb[];
 }
+
+export type OrderStatus = "pending_payment" | "paid" | "shipped" | "cancelled" | "expired";
+
+export interface Order {
+  id: string;
+  user_id: string;
+  status: OrderStatus;
+  subtotal: number;
+  frete_valor: number;
+  total: number;
+  cep_destino: string;
+  endereco_json: { cep?: string; frete_nome?: string };
+  mp_preference_id: string | null;
+  mp_payment_id: string | null;
+  reserved_until: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OrderItemDb {
+  id: string;
+  order_id: string;
+  product_id: string;
+  quantidade: number;
+  preco_unitario: number;
+  created_at: string;
+}
+
+export interface OrderItemComProduto extends OrderItemDb {
+  products: Pick<Produto, "nome" | "slug"> | null;
+}
