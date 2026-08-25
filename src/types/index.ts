@@ -14,22 +14,6 @@ export interface ProjetoImagem {
   alt: string;
 }
 
-export interface Projeto {
-  slug: string;
-  numero: string;
-  nome: string;
-  categoria: CategoriaSlug;
-  destaque: boolean;
-  capa: ProjetoImagem;
-  galeria: ProjetoImagem[];
-  material: string;
-  tecnologia: string;
-  dimensoes: string;
-  quantidade: string;
-  descricao: string;
-  aplicacoes: string[];
-}
-
 export interface Servico {
   slug: string;
   numero: string;
@@ -74,4 +58,34 @@ export interface Profile {
   nome: string | null;
   role: UserRole;
   created_at: string;
+}
+
+export interface ProdutoImagemDb {
+  id: string;
+  product_id: string;
+  url: string;
+  alt: string;
+  ordem: number;
+}
+
+export interface Produto {
+  id: string;
+  nome: string;
+  descricao: string;
+  preco: number;
+  peso_kg: number;
+  altura_cm: number;
+  largura_cm: number;
+  comprimento_cm: number;
+  stock: number;
+  ativo: boolean;
+  categoria: CategoriaSlug;
+  destaque: boolean;
+  slug: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProdutoComImagens extends Produto {
+  product_images: ProdutoImagemDb[];
 }

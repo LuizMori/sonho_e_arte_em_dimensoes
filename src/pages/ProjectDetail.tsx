@@ -1,34 +1,79 @@
+import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { Reveal } from "@/components/Reveal";
 import { Gallery } from "@/components/Gallery";
 import { Button } from "@/components/ui/Button";
-import { projetos } from "@/data/projetos";
+import { supabase } from "@/lib/supabaseClient";
 import { categorias } from "@/data/categorias";
+import type { ProdutoComImagens } from "@/types";
 
 export function ProjectDetail() {
   const { slug } = useParams<{ slug: string }>();
-  const index = projetos.findIndex((p) => p.slug === slug);
-  const projeto = index >= 0 ? projetos[index] : undefined;
+  const [produto, setProduto] = useState<ProdutoComImagens | null | undefined>(undefined);
+  const [proximo, setProximo] = useState<{ slug: string; nome: string } | null>(null);
+
+  useEffect(() => {
+    setProduto(undefined);
+    (async () => {
+      const { data } = await supabase
+        .from("products")
+        .select("*, product_images(*)")
+        .eq("slug", slug)
+        .eq("ativo", true)
+        .maybeSingle();
+      setProduto((data as ProdutoComImagens) ?? null);
+    })();
+  }, [slug]);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("products")
+        .select("slug, nome")
+        .eq("ativo", true)
+        .order("created_at", { ascending: false });
+      if (!data || data.length <= 1) {
+        setProximo(null);
+        return;
+      }
+      const index = data.findIndex((p) => p.slug === slug);
+      const proximoProduto = index >= 0 ? data[(index + 1) % data.length] : null;
+      setProximo(proximoProduto);
+    })();
+  }, [slug]);
 
   usePageMeta(
-    projeto ? `${projeto.nome} | Portfólio | Sonho e Arte em Dimensões` : "Projeto não encontrado",
-    projeto?.descricao ?? "Projeto não encontrado no portfólio da Sonho e Arte em Dimensões."
+    produto ? `${produto.nome} | Portfólio | Sonho e Arte em Dimensões` : "Portfólio | Sonho e Arte em Dimensões",
+    produto?.descricao ?? "Portfólio de peças da Sonho e Arte em Dimensões."
   );
 
-  if (!projeto) {
+  if (produto === null) {
     return <Navigate to="/portfolio" replace />;
   }
 
-  const categoria = categorias.find((c) => c.slug === projeto.categoria);
-  const proximo = projetos[(index + 1) % projetos.length];
+  if (produto === undefined) {
+    return (
+      <section className="pt-40 pb-24 md:pt-48 md:pb-32">
+        <div className="container">
+          <p className="text-navy/60">Carregando...</p>
+        </div>
+      </section>
+    );
+  }
+
+  const categoria = categorias.find((c) => c.slug === produto.categoria);
+  const [capa, ...galeria] = produto.product_images;
 
   const metadados = [
     { label: "Categoria", valor: categoria?.nome ?? "" },
-    { label: "Material", valor: projeto.material },
-    { label: "Tecnologia", valor: projeto.tecnologia },
-    { label: "Dimensões", valor: projeto.dimensoes },
-    { label: "Quantidade", valor: projeto.quantidade },
+    { label: "Preço", valor: produto.preco.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) },
+    { label: "Peso", valor: `${produto.peso_kg} kg` },
+    {
+      label: "Dimensões",
+      valor: `${produto.altura_cm} × ${produto.largura_cm} × ${produto.comprimento_cm} cm`,
+    },
+    { label: "Disponibilidade", valor: produto.stock > 0 ? `${produto.stock} em estoque` : "Sem estoque" },
   ];
 
   return (
@@ -45,19 +90,20 @@ export function ProjectDetail() {
 
       <section className="pt-8 pb-16 md:pb-24">
         <div className="container">
-          <Reveal className="flex items-start justify-between gap-6 mb-8">
+          <Reveal className="mb-8">
             <h1 className="font-display text-4xl sm:text-6xl md:text-7xl tracking-tightest text-navy leading-[1.02] max-w-3xl">
-              {projeto.nome}
+              {produto.nome}
             </h1>
-            <span className="font-display text-3xl text-orange shrink-0 hidden sm:block">{projeto.numero}</span>
           </Reveal>
-          <Reveal delay={100}>
-            <img
-              src={projeto.capa.url}
-              alt={projeto.capa.alt}
-              className="w-full h-auto max-h-[80vh] object-cover"
-            />
-          </Reveal>
+          {capa && (
+            <Reveal delay={100}>
+              <img
+                src={capa.url}
+                alt={capa.alt || produto.nome}
+                className="w-full h-auto max-h-[80vh] object-cover"
+              />
+            </Reveal>
+          )}
         </div>
       </section>
 
@@ -76,30 +122,18 @@ export function ProjectDetail() {
 
           <div>
             <Reveal>
-              <p className="text-navy/80 text-lg sm:text-xl leading-relaxed font-display font-light">
-                {projeto.descricao}
+              <p className="text-navy/80 text-lg sm:text-xl leading-relaxed font-display font-light whitespace-pre-line">
+                {produto.descricao}
               </p>
-            </Reveal>
-
-            <Reveal delay={100} className="mt-14">
-              <p className="label-caps text-neutral mb-5">Aplicações e possibilidades</p>
-              <ul className="space-y-3">
-                {projeto.aplicacoes.map((aplicacao) => (
-                  <li key={aplicacao} className="text-navy/70 flex gap-3">
-                    <span className="text-magenta">•</span>
-                    <span>{aplicacao}</span>
-                  </li>
-                ))}
-              </ul>
             </Reveal>
           </div>
         </div>
       </section>
 
-      {projeto.galeria.length > 0 && (
+      {galeria.length > 0 && (
         <section className="pb-24 md:pb-32">
           <div className="container">
-            <Gallery imagens={projeto.galeria} />
+            <Gallery imagens={galeria.map((imagem) => ({ url: imagem.url, alt: imagem.alt || produto.nome }))} />
           </div>
         </section>
       )}
@@ -107,7 +141,7 @@ export function ProjectDetail() {
       <section className="py-24 md:py-32 bg-navy text-cream-light text-center">
         <Reveal className="container max-w-xl mx-auto">
           <p className="font-display text-3xl sm:text-4xl tracking-tightest leading-[1.15]">
-            Gostou deste projeto? Podemos criar algo semelhante para você.
+            Gostou desta peça? Fale com a gente para comprar ou personalizar.
           </p>
           <div className="mt-10">
             <Link to="/orcamento">
@@ -117,19 +151,20 @@ export function ProjectDetail() {
         </Reveal>
       </section>
 
-      <section className="py-16 md:py-20 border-t border-neutral-light">
-        <div className="container">
-          <Link to={`/portfolio/${proximo.slug}`} className="group flex items-center justify-between gap-6">
-            <div>
-              <p className="label-caps text-neutral mb-2">Próximo projeto</p>
-              <p className="font-display text-3xl sm:text-4xl text-navy group-hover:text-magenta transition-colors">
-                {proximo.nome}
-              </p>
-            </div>
-            <span className="font-display text-2xl text-orange">{proximo.numero}</span>
-          </Link>
-        </div>
-      </section>
+      {proximo && (
+        <section className="py-16 md:py-20 border-t border-neutral-light">
+          <div className="container">
+            <Link to={`/portfolio/${proximo.slug}`} className="group flex items-center justify-between gap-6">
+              <div>
+                <p className="label-caps text-neutral mb-2">Próxima peça</p>
+                <p className="font-display text-3xl sm:text-4xl text-navy group-hover:text-magenta transition-colors">
+                  {proximo.nome}
+                </p>
+              </div>
+            </Link>
+          </div>
+        </section>
+      )}
     </>
   );
 }

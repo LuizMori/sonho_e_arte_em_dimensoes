@@ -4,6 +4,7 @@ import { AuthProvider } from "@/lib/AuthProvider";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { Layout } from "@/components/Layout";
 import { RequireAuth } from "@/components/RequireAuth";
+import { RequireAdmin } from "@/components/RequireAdmin";
 import { Home } from "@/pages/Home";
 import { Sobre } from "@/pages/Sobre";
 import { Portfolio } from "@/pages/Portfolio";
@@ -19,6 +20,8 @@ import { Cadastro } from "@/pages/Cadastro";
 import { EsqueciSenha } from "@/pages/EsqueciSenha";
 import { RedefinirSenha } from "@/pages/RedefinirSenha";
 import { Conta } from "@/pages/Conta";
+import { AdminProdutos } from "@/pages/admin/AdminProdutos";
+import { AdminProdutoForm } from "@/pages/admin/AdminProdutoForm";
 import { NotFound } from "@/pages/NotFound";
 
 function App() {
@@ -48,6 +51,30 @@ function App() {
                 <RequireAuth>
                   <Conta />
                 </RequireAuth>
+              }
+            />
+            <Route
+              path="/admin/produtos"
+              element={
+                <RequireAdmin>
+                  <AdminProdutos />
+                </RequireAdmin>
+              }
+            />
+            <Route
+              path="/admin/produtos/novo"
+              element={
+                <RequireAdmin>
+                  <AdminProdutoForm />
+                </RequireAdmin>
+              }
+            />
+            <Route
+              path="/admin/produtos/:id"
+              element={
+                <RequireAdmin>
+                  <AdminProdutoForm />
+                </RequireAdmin>
               }
             />
             <Route path="*" element={<NotFound />} />

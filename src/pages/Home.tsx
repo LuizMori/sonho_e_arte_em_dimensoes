@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { Reveal } from "@/components/Reveal";
@@ -7,9 +8,11 @@ import { ScrollIndicator } from "@/components/ScrollIndicator";
 import { DecorCurve, DecorStar } from "@/components/Decor";
 import { HeroArt } from "@/components/HeroArt";
 import { Button } from "@/components/ui/Button";
-import { projetosDestaque } from "@/data/projetos";
+import { supabase } from "@/lib/supabaseClient";
+import { categorias } from "@/data/categorias";
 import { servicos } from "@/data/servicos";
 import { filosofia } from "@/data/institucional";
+import type { ProdutoComImagens } from "@/types";
 
 const dreamSteps = [
   {
@@ -53,6 +56,20 @@ export function Home() {
     "Transformamos ideias em objetos reais através da impressão 3D. Peças personalizadas, decoração, miniaturas, protótipos e muito mais."
   );
 
+  const [produtosDestaque, setProdutosDestaque] = useState<ProdutoComImagens[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("products")
+        .select("*, product_images(*)")
+        .eq("ativo", true)
+        .eq("destaque", true)
+        .order("created_at", { ascending: false });
+      setProdutosDestaque((data as ProdutoComImagens[]) ?? []);
+    })();
+  }, []);
+
   return (
     <>
       {/* Hero */}
@@ -88,31 +105,41 @@ export function Home() {
       </section>
 
       {/* Projetos em destaque */}
-      <section className="py-24 md:py-32">
-        <div className="container">
-          <Reveal className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-16">
-            <SectionTitle label="Trabalhos selecionados" title="Projetos em destaque" />
-            <Link to="/portfolio" className="label-caps text-navy/70 hover:text-magenta transition-colors shrink-0">
-              Ver portfólio completo
-            </Link>
-          </Reveal>
+      {produtosDestaque.length > 0 && (
+        <section className="py-24 md:py-32">
+          <div className="container">
+            <Reveal className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-16">
+              <SectionTitle label="Trabalhos selecionados" title="Projetos em destaque" />
+              <Link to="/portfolio" className="label-caps text-navy/70 hover:text-magenta transition-colors shrink-0">
+                Ver portfólio completo
+              </Link>
+            </Reveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-16">
-            {projetosDestaque.map((projeto, index) => (
-              <Reveal
-                key={projeto.slug}
-                delay={index * 80}
-                className={index % 3 === 1 ? "md:mt-20" : undefined}
-              >
-                <ProjectCard
-                  projeto={projeto}
-                  imageAspect={index % 3 === 0 ? "aspect-[4/5]" : "aspect-[3/4]"}
-                />
-              </Reveal>
-            ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-16">
+              {produtosDestaque.map((produto, index) => {
+                const categoria = categorias.find((c) => c.slug === produto.categoria);
+                const capa = produto.product_images[0];
+                return (
+                  <Reveal
+                    key={produto.slug}
+                    delay={index * 80}
+                    className={index % 3 === 1 ? "md:mt-20" : undefined}
+                  >
+                    <ProjectCard
+                      to={`/portfolio/${produto.slug}`}
+                      nome={produto.nome}
+                      categoriaNome={categoria?.nome}
+                      imagemUrl={capa?.url}
+                      imagemAlt={capa?.alt || produto.nome}
+                      imageAspect={index % 3 === 0 ? "aspect-[4/5]" : "aspect-[3/4]"}
+                    />
+                  </Reveal>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Institucional */}
       <section className="py-24 md:py-32 bg-cream-light">

@@ -17,7 +17,7 @@ const navLinks = [
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -54,48 +54,55 @@ export function Header() {
           <span className="text-orange font-normal">em Dimensões</span>
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-9">
-          {navLinks.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              end={link.to === "/"}
-              className={({ isActive }) =>
-                cn(
-                  "label-caps transition-colors",
-                  isActive ? "text-magenta" : "text-navy/70 hover:text-navy"
-                )
-              }
-            >
-              {link.label}
-            </NavLink>
-          ))}
-        </nav>
-
-        <div className="hidden lg:flex items-center gap-6">
-          {user ? (
-            <div className="flex items-center gap-4">
-              <Link to="/conta" className="label-caps text-navy/70 hover:text-navy transition-colors">
-                Minha conta
-              </Link>
-              <button
-                onClick={handleSignOut}
-                className="label-caps text-navy/70 hover:text-magenta transition-colors"
+        <div className="hidden lg:flex items-center gap-10">
+          <nav className="flex items-center gap-9">
+            {navLinks.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                end={link.to === "/"}
+                className={({ isActive }) =>
+                  cn(
+                    "label-caps transition-colors",
+                    isActive ? "text-magenta" : "text-navy/70 hover:text-navy"
+                  )
+                }
               >
-                Sair
-              </button>
-            </div>
-          ) : (
-            <Link to="/login" className="label-caps text-navy/70 hover:text-navy transition-colors">
-              Entrar
+                {link.label}
+              </NavLink>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-6 pl-2 border-l border-neutral-light">
+            {user ? (
+              <div className="flex items-center gap-4">
+                {profile?.role === "admin" && (
+                  <Link to="/admin/produtos" className="label-caps text-navy/70 hover:text-navy transition-colors">
+                    Admin
+                  </Link>
+                )}
+                <Link to="/conta" className="label-caps text-navy/70 hover:text-navy transition-colors">
+                  Minha conta
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  className="label-caps text-navy/70 hover:text-magenta transition-colors"
+                >
+                  Sair
+                </button>
+              </div>
+            ) : (
+              <Link to="/login" className="label-caps text-navy/70 hover:text-navy transition-colors">
+                Entrar
+              </Link>
+            )}
+            <Link
+              to="/orcamento"
+              className="label-caps inline-flex items-center rounded-full bg-navy text-cream-light px-6 py-3 hover:bg-magenta transition-colors"
+            >
+              Solicitar orçamento
             </Link>
-          )}
-          <Link
-            to="/orcamento"
-            className="label-caps inline-flex items-center rounded-full bg-navy text-cream-light px-6 py-3 hover:bg-magenta transition-colors"
-          >
-            Solicitar orçamento
-          </Link>
+          </div>
         </div>
 
         <button
@@ -128,9 +135,16 @@ export function Header() {
             ))}
             {user ? (
               <div className="flex items-center justify-between py-3 border-b border-neutral-light/60">
-                <Link to="/conta" onClick={() => setOpen(false)} className="label-caps text-navy">
-                  Minha conta
-                </Link>
+                <div className="flex items-center gap-4">
+                  {profile?.role === "admin" && (
+                    <Link to="/admin/produtos" onClick={() => setOpen(false)} className="label-caps text-navy">
+                      Admin
+                    </Link>
+                  )}
+                  <Link to="/conta" onClick={() => setOpen(false)} className="label-caps text-navy">
+                    Minha conta
+                  </Link>
+                </div>
                 <button onClick={handleSignOut} className="label-caps text-navy/70">
                   Sair
                 </button>

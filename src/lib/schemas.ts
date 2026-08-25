@@ -68,3 +68,21 @@ export const resetPasswordSchema = z
   });
 
 export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
+
+export const produtoSchema = z.object({
+  nome: z.string().trim().min(2, "Informe o nome do produto"),
+  descricao: z.string().trim().min(10, "Descreva o produto com pelo menos 10 caracteres"),
+  preco: z.coerce.number().positive("Informe um preço válido"),
+  categoria: z.enum(["decoracao", "personalizados", "miniaturas", "colecionaveis"], {
+    required_error: "Selecione uma categoria",
+  }),
+  destaque: z.boolean(),
+  pesoKg: z.coerce.number().positive("Informe o peso em kg"),
+  alturaCm: z.coerce.number().positive("Informe a altura em cm"),
+  larguraCm: z.coerce.number().positive("Informe a largura em cm"),
+  comprimentoCm: z.coerce.number().positive("Informe o comprimento em cm"),
+  stock: z.coerce.number().int().min(0, "Informe a quantidade em estoque"),
+  ativo: z.boolean(),
+});
+
+export type ProdutoFormData = z.infer<typeof produtoSchema>;
