@@ -5,6 +5,8 @@ import { AdminNav } from "@/components/admin/AdminNav";
 import { supabase } from "@/lib/supabaseClient";
 import type { PageView } from "@/types";
 
+const PREFIXO_PRODUTO = "/portfolio/";
+
 const DIAS_JANELA = 30;
 const DIAS_EXIBIDOS = 14;
 
@@ -23,18 +25,23 @@ export function AdminVisitas() {
   usePageMeta("Visitas | Admin | Sonho e Arte em Dimensões", "Acompanhe as visitas diárias ao site.");
 
   const [visitas, setVisitas] = useState<PageView[]>([]);
+  const [nomesPorSlug, setNomesPorSlug] = useState<Map<string, string>>(new Map());
   const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
     (async () => {
       const desde = new Date();
       desde.setDate(desde.getDate() - DIAS_JANELA);
-      const { data } = await supabase
-        .from("page_views")
-        .select("*")
-        .gte("created_at", desde.toISOString())
-        .order("created_at", { ascending: true });
-      setVisitas((data as PageView[]) ?? []);
+      const [{ data: views }, { data: produtos }] = await Promise.all([
+        supabase
+          .from("page_views")
+          .select("*")
+          .gte("created_at", desde.toISOString())
+          .order("created_at", { ascending: true }),
+        supabase.from("products").select("nome, slug"),
+      ]);
+      setVisitas((views as PageView[]) ?? []);
+      setNomesPorSlug(new Map((produtos ?? []).map((p) => [p.slug, p.nome])));
       setCarregando(false);
     })();
   }, []);
@@ -80,9 +87,23 @@ export function AdminVisitas() {
     };
   }, [visitas]);
 
+  const produtosMaisVistos = useMemo(() => {
+    const mapa = new Map<string, number>();
+    for (const visita of visitas) {
+      if (!visita.path.startsWith(PREFIXO_PRODUTO)) continue;
+      const slug = visita.path.slice(PREFIXO_PRODUTO.length);
+      mapa.set(slug, (mapa.get(slug) ?? 0) + 1);
+    }
+    return [...mapa.entries()]
+      .map(([slug, total]) => ({ nome: nomesPorSlug.get(slug) ?? slug, total }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 8);
+  }, [visitas, nomesPorSlug]);
+
   const paginasMaisVisitadas = useMemo(() => {
     const mapa = new Map<string, number>();
     for (const visita of visitas) {
+      if (visita.path.startsWith(PREFIXO_PRODUTO)) continue;
       mapa.set(visita.path, (mapa.get(visita.path) ?? 0) + 1);
     }
     return [...mapa.entries()]
@@ -148,8 +169,27 @@ export function AdminVisitas() {
               </div>
             </Reveal>
 
+            <Reveal className="mb-16">
+              <p className="label-caps text-navy/70 mb-4">Produtos mais buscados (30 dias)</p>
+              {produtosMaisVistos.length === 0 ? (
+                <p className="text-navy/50 text-sm">Nenhuma visita a produtos registrada ainda.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {produtosMaisVistos.map((produto) => (
+                    <li
+                      key={produto.nome}
+                      className="flex items-center justify-between border-b border-neutral-light/60 pb-2"
+                    >
+                      <span className="text-navy text-sm">{produto.nome}</span>
+                      <span className="text-navy/70 text-sm shrink-0">{produto.total} visualizações</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Reveal>
+
             <Reveal>
-              <p className="label-caps text-navy/70 mb-4">Páginas mais visitadas (30 dias)</p>
+              <p className="label-caps text-navy/70 mb-4">Outras páginas mais visitadas (30 dias)</p>
               {paginasMaisVisitadas.length === 0 ? (
                 <p className="text-navy/50 text-sm">Nenhuma visita registrada ainda.</p>
               ) : (
