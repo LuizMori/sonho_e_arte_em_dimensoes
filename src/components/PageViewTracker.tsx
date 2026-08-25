@@ -18,7 +18,7 @@ export function PageViewTracker() {
 
   useEffect(() => {
     if (pathname.startsWith("/admin")) return;
-    supabase.from("page_views").insert({ path: pathname, session_id: obterSessionId() });
+    void supabase.from("page_views").insert({ path: pathname, session_id: obterSessionId() }).then();
   }, [pathname]);
 
   return null;

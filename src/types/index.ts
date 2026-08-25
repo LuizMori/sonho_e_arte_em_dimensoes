@@ -100,9 +100,10 @@ export interface Order {
 export interface OrderItemDb {
   id: string;
   order_id: string;
-  product_id: string;
+  product_id: string | null;
   quantidade: number;
   preco_unitario: number;
+  nome_produto: string | null;
   created_at: string;
 }
 

@@ -132,7 +132,8 @@ export function Pedido() {
           {itens.map((item) => (
             <div key={item.id} className="flex items-center justify-between border-b border-neutral-light pb-4">
               <p className="text-navy">
-                {item.products?.nome ?? "Produto"} <span className="text-navy/50">× {item.quantidade}</span>
+                {item.products?.nome ?? item.nome_produto ?? "Produto"}{" "}
+                <span className="text-navy/50">× {item.quantidade}</span>
               </p>
               <p className="text-navy">{formatarMoeda(item.preco_unitario * item.quantidade)}</p>
             </div>

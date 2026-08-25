@@ -98,7 +98,10 @@ export function AdminPedidos() {
                     </td>
                     <td className="py-4 pr-4 text-navy/80">
                       {pedido.order_items
-                        .map((item) => `${item.quantidade}× ${item.products?.nome ?? "Produto removido"}`)
+                        .map(
+                          (item) =>
+                            `${item.quantidade}× ${item.products?.nome ?? item.nome_produto ?? "Produto removido"}`
+                        )
                         .join(", ")}
                     </td>
                     <td className="py-4 pr-4 text-navy whitespace-nowrap">{formatarMoeda(pedido.total)}</td>

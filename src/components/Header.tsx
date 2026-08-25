@@ -49,13 +49,17 @@ export function Header() {
       )}
     >
       <div className="container flex items-center justify-between h-20">
-        <Link to="/" className="flex items-center font-display text-xl tracking-tightest text-navy" onClick={() => setOpen(false)}>
+        <Link to="/" className="flex items-center font-display text-xl tracking-tightest text-orange" onClick={() => setOpen(false)}>
           <span className="hidden sm:inline">Sonho e Arte&nbsp;</span>
           <span className="sm:hidden">S&A&nbsp;</span>
-          <span className="text-orange font-normal">em Dimensões</span>
+          <span className="font-normal">em Dimensões</span>
         </Link>
 
         <div className="hidden lg:flex items-center gap-10">
+          <span className="text-navy/20 text-lg select-none" aria-hidden="true">
+            |
+          </span>
+
           <nav className="flex items-center gap-9">
             {navLinks.map((link) => (
               <NavLink
@@ -74,7 +78,11 @@ export function Header() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-6 pl-2 border-l border-neutral-light">
+          <span className="text-navy/20 text-lg select-none" aria-hidden="true">
+            |
+          </span>
+
+          <div className="flex items-center gap-6">
             {user ? (
               <div className="flex items-center gap-4">
                 {profile?.role === "admin" && (
