@@ -4,6 +4,8 @@ import { Reveal } from "@/components/Reveal";
 import { SectionTitle } from "@/components/SectionTitle";
 import { DecorStar } from "@/components/Decor";
 import { historiaSobre } from "@/data/institucional";
+import imagemDetalhe from "@/assets/sobre/peca-detalhe.jpeg";
+import imagemBancada from "@/assets/sobre/peca-bancada.jpeg";
 
 const valores = [
   {
@@ -47,8 +49,8 @@ export function Sobre() {
         <div className="container grid grid-cols-1 lg:grid-cols-[0.8fr_1fr] gap-12 lg:gap-20">
           <Reveal className="lg:sticky lg:top-32 self-start">
             <img
-              src="https://images.unsplash.com/photo-1581092335878-2d9ff86ca2bf?q=80&w=1200&auto=format&fit=crop"
-              alt="Detalhe de peças impressas em 3D sobre bancada de trabalho"
+              src={imagemDetalhe}
+              alt="Peça impressa em 3D, detalhe de acabamento do estúdio"
               loading="lazy"
               className="w-full h-auto object-cover"
             />
@@ -97,8 +99,8 @@ export function Sobre() {
         <div className="container grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           <Reveal>
             <img
-              src="https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?q=80&w=1200&auto=format&fit=crop"
-              alt="Impressora 3D produzindo uma peça técnica em close"
+              src={imagemBancada}
+              alt="Peça personalizada impressa em 3D sobre bancada de madeira"
               loading="lazy"
               className="w-full h-auto object-cover"
             />
