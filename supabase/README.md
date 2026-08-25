@@ -36,6 +36,9 @@ com a CLI é uma opção futura.
 10. `0010_profiles_email.sql` — adiciona `email` a `profiles` (snapshot de `auth.users.email`, atualizado
     pela trigger de cadastro), usado pela tela `/admin/usuarios` para listar nome + e-mail sem precisar
     de uma função serverless com a service role key.
+11. `0011_endereco_pedido.sql` — adiciona `telefone` a `orders` e reescreve `criar_pedido` para receber
+    o endereço completo (mesclado em `endereco_json`) e o telefone de contato, com defaults para não
+    quebrar a chamada antiga durante a janela entre migration e deploy.
 
 Depois de rodar a migração 1 e o dono da loja se cadastrar pelo fluxo normal (`/cadastro`), promova a
 conta a admin rodando no SQL Editor:

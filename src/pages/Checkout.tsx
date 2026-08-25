@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { Reveal } from "@/components/Reveal";
 import { Button } from "@/components/ui/Button";
@@ -9,6 +11,7 @@ import { useToast } from "@/components/ui/Toast";
 import { useCart } from "@/lib/CartProvider";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
+import { enderecoCheckoutSchema, type EnderecoCheckoutFormData } from "@/lib/schemas";
 import type { Produto } from "@/types";
 
 interface OpcaoFrete {
@@ -22,7 +25,7 @@ interface OpcaoFrete {
 const formatarMoeda = (valor: number) => valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export function Checkout() {
-  usePageMeta("Checkout | Sonho e Arte em Dimensões", "Calcule o frete e revise seu pedido.");
+  usePageMeta("Checkout | Sonho e Arte em Dimensões", "Calcule o frete, informe o endereço e revise seu pedido.");
 
   const { items, clear } = useCart();
   const { user } = useAuth();
@@ -38,6 +41,14 @@ export function Checkout() {
   const [opcoes, setOpcoes] = useState<OpcaoFrete[] | null>(null);
   const [opcaoSelecionada, setOpcaoSelecionada] = useState<string | null>(null);
   const [erroFrete, setErroFrete] = useState<string | undefined>();
+  const [buscandoEndereco, setBuscandoEndereco] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<EnderecoCheckoutFormData>({ resolver: zodResolver(enderecoCheckoutSchema) });
 
   useEffect(() => {
     if (items.length === 0) {
@@ -57,6 +68,34 @@ export function Checkout() {
       setCarregando(false);
     })();
   }, [items]);
+
+  // Autopreenche rua/bairro/cidade/UF a partir do CEP (ViaCEP), assim que o usuário completa 8 dígitos.
+  useEffect(() => {
+    const cepLimpo = cep.replace(/\D/g, "");
+    if (cepLimpo.length !== 8) return;
+
+    let ativo = true;
+    setBuscandoEndereco(true);
+    (async () => {
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+        const data = await response.json();
+        if (!ativo || data?.erro) return;
+        setValue("logradouro", data.logradouro ?? "", { shouldValidate: false });
+        setValue("bairro", data.bairro ?? "", { shouldValidate: false });
+        setValue("cidade", data.localidade ?? "", { shouldValidate: false });
+        setValue("estado", data.uf ?? "", { shouldValidate: false });
+      } catch {
+        // silencioso: se o ViaCEP falhar, o usuário ainda pode preencher o endereço manualmente
+      } finally {
+        if (ativo) setBuscandoEndereco(false);
+      }
+    })();
+
+    return () => {
+      ativo = false;
+    };
+  }, [cep, setValue]);
 
   const linhas = items
     .map((item) => {
@@ -108,7 +147,7 @@ export function Checkout() {
     }
   };
 
-  const finalizarPedido = async () => {
+  const finalizarPedido = async (endereco: EnderecoCheckoutFormData) => {
     if (!frete) return;
     setFinalizando(true);
     try {
@@ -124,6 +163,15 @@ export function Checkout() {
           cepDestino: cep.replace(/\D/g, ""),
           freteValor: frete.valor,
           freteNome: `${frete.transportadora} - ${frete.nome}`,
+          telefone: endereco.telefone,
+          endereco: {
+            logradouro: endereco.logradouro,
+            numero: endereco.numero,
+            complemento: endereco.complemento,
+            bairro: endereco.bairro,
+            cidade: endereco.cidade,
+            estado: endereco.estado,
+          },
         }),
       });
 
@@ -158,7 +206,7 @@ export function Checkout() {
         {carregando ? (
           <p className="text-navy/60">Carregando...</p>
         ) : (
-          <>
+          <form onSubmit={handleSubmit(finalizarPedido)} noValidate>
             <Reveal className="space-y-4 mb-14">
               {linhas.map(({ item, produto }) => (
                 <div key={produto.id} className="flex items-center justify-between border-b border-neutral-light pb-4">
@@ -176,7 +224,7 @@ export function Checkout() {
 
             <Reveal delay={100}>
               <p className="label-caps text-navy/70 mb-4">Calcular frete</p>
-              <form onSubmit={calcularFrete} className="flex flex-col sm:flex-row gap-4 sm:items-end">
+              <div className="flex flex-col sm:flex-row gap-4 sm:items-end">
                 <div className="flex-1">
                   <Label htmlFor="cep">CEP de destino</Label>
                   <Input
@@ -188,10 +236,10 @@ export function Checkout() {
                   />
                   <FieldError message={cepErro} />
                 </div>
-                <Button type="submit" disabled={calculando} variant="outline">
+                <Button type="button" onClick={calcularFrete} disabled={calculando} variant="outline">
                   {calculando ? "Calculando..." : "Calcular"}
                 </Button>
-              </form>
+              </div>
 
               {erroFrete && <p className="mt-4 text-sm text-magenta">{erroFrete}</p>}
 
@@ -227,6 +275,59 @@ export function Checkout() {
               )}
             </Reveal>
 
+            <Reveal delay={130} className="mt-14">
+              <p className="label-caps text-navy/70 mb-1">Endereço de entrega</p>
+              <p className="text-sm text-navy/50 mb-6">
+                {buscandoEndereco
+                  ? "Buscando endereço pelo CEP..."
+                  : "Preenchido automaticamente a partir do CEP informado acima — confira e complete."}
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_140px] gap-6">
+                <div>
+                  <Label htmlFor="logradouro">Rua / Avenida</Label>
+                  <Input id="logradouro" {...register("logradouro")} />
+                  <FieldError message={errors.logradouro?.message} />
+                </div>
+                <div>
+                  <Label htmlFor="numero">Número</Label>
+                  <Input id="numero" {...register("numero")} />
+                  <FieldError message={errors.numero?.message} />
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <Label htmlFor="complemento">Complemento (opcional)</Label>
+                <Input id="complemento" placeholder="Apto, bloco, referência..." {...register("complemento")} />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+                <div>
+                  <Label htmlFor="bairro">Bairro</Label>
+                  <Input id="bairro" {...register("bairro")} />
+                  <FieldError message={errors.bairro?.message} />
+                </div>
+                <div className="grid grid-cols-[1fr_90px] gap-4">
+                  <div>
+                    <Label htmlFor="cidade">Cidade</Label>
+                    <Input id="cidade" {...register("cidade")} />
+                    <FieldError message={errors.cidade?.message} />
+                  </div>
+                  <div>
+                    <Label htmlFor="estado">UF</Label>
+                    <Input id="estado" maxLength={2} className="uppercase" {...register("estado")} />
+                    <FieldError message={errors.estado?.message} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <Label htmlFor="telefone">Telefone de contato</Label>
+                <Input id="telefone" placeholder="(00) 00000-0000" {...register("telefone")} />
+                <FieldError message={errors.telefone?.message} />
+              </div>
+            </Reveal>
+
             <Reveal delay={150} className="flex items-center justify-between mt-14 pt-4 border-t border-neutral-light">
               <span className="label-caps text-navy/70">Total</span>
               <span className="font-display text-3xl text-navy">{formatarMoeda(total)}</span>
@@ -236,7 +337,9 @@ export function Checkout() {
               {!user ? (
                 <>
                   <Link to="/login" state={{ from: { pathname: "/checkout" } }}>
-                    <Button className="w-full sm:w-auto">Fazer login para finalizar</Button>
+                    <Button type="button" className="w-full sm:w-auto">
+                      Fazer login para finalizar
+                    </Button>
                   </Link>
                   <p className="text-sm text-navy/50 mt-4">
                     Você precisa estar logado para finalizar o pedido. Seu carrinho fica salvo.
@@ -244,11 +347,7 @@ export function Checkout() {
                 </>
               ) : (
                 <>
-                  <Button
-                    onClick={finalizarPedido}
-                    disabled={!frete || finalizando}
-                    className="w-full sm:w-auto"
-                  >
+                  <Button type="submit" disabled={!frete || finalizando} className="w-full sm:w-auto">
                     {finalizando ? "Finalizando..." : "Finalizar pedido"}
                   </Button>
                   <p className="text-sm text-navy/50 mt-4">
@@ -259,7 +358,7 @@ export function Checkout() {
                 </>
               )}
             </Reveal>
-          </>
+          </form>
         )}
       </div>
     </section>

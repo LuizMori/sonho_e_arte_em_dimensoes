@@ -91,7 +91,17 @@ export interface Order {
   frete_valor: number;
   total: number;
   cep_destino: string;
-  endereco_json: { cep?: string; frete_nome?: string };
+  telefone: string | null;
+  endereco_json: {
+    cep?: string;
+    frete_nome?: string;
+    logradouro?: string;
+    numero?: string;
+    complemento?: string;
+    bairro?: string;
+    cidade?: string;
+    estado?: string;
+  };
   mp_preference_id: string | null;
   mp_payment_id: string | null;
   reserved_until: string | null;

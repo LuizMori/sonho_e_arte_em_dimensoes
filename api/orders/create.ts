@@ -6,11 +6,22 @@ interface CreateOrderItemPayload {
   quantidade: number;
 }
 
+interface EnderecoPayload {
+  logradouro: string;
+  numero: string;
+  complemento?: string;
+  bairro: string;
+  cidade: string;
+  estado: string;
+}
+
 interface CreateOrderPayload {
   itens: CreateOrderItemPayload[];
   cepDestino: string;
   freteValor: number;
   freteNome: string;
+  telefone: string;
+  endereco: EnderecoPayload;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -48,10 +59,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const payload = req.body as CreateOrderPayload;
-  const { itens, cepDestino, freteValor, freteNome } = payload ?? {};
+  const { itens, cepDestino, freteValor, freteNome, telefone, endereco } = payload ?? {};
 
-  if (!itens || itens.length === 0 || !cepDestino || typeof freteValor !== "number") {
+  if (!itens || itens.length === 0 || !cepDestino || typeof freteValor !== "number" || !telefone) {
     res.status(400).json({ error: "Dados do pedido incompletos" });
+    return;
+  }
+
+  if (!endereco?.logradouro || !endereco.numero || !endereco.bairro || !endereco.cidade || !endereco.estado) {
+    res.status(400).json({ error: "Informe o endereço de entrega completo" });
     return;
   }
 
@@ -62,6 +78,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       p_cep_destino: cepDestino,
       p_frete_valor: freteValor,
       p_frete_nome: freteNome ?? "",
+      p_telefone: telefone,
+      p_endereco: endereco,
     });
 
     if (error) throw error;

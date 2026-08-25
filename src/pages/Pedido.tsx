@@ -152,6 +152,30 @@ export function Pedido() {
           </div>
         </Reveal>
 
+        <Reveal className="mb-10">
+          <p className="label-caps text-navy/70 mb-4">Endereço de entrega</p>
+          <p className="text-navy/80 leading-relaxed">
+            {order.endereco_json.logradouro ? (
+              <>
+                {order.endereco_json.logradouro}, {order.endereco_json.numero}
+                {order.endereco_json.complemento ? ` — ${order.endereco_json.complemento}` : ""}
+                <br />
+                {order.endereco_json.bairro} — {order.endereco_json.cidade}/{order.endereco_json.estado}
+                <br />
+                CEP {order.cep_destino}
+              </>
+            ) : (
+              <>CEP {order.cep_destino}</>
+            )}
+            {order.telefone && (
+              <>
+                <br />
+                Telefone: {order.telefone}
+              </>
+            )}
+          </p>
+        </Reveal>
+
         {order.status === "pending_payment" && (
           <Reveal className="bg-cream-light border border-neutral-light rounded-xl px-6 py-5 mb-10">
             {order.reserved_until && (

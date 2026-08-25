@@ -94,3 +94,15 @@ export const depoimentoSchema = z.object({
 });
 
 export type DepoimentoFormData = z.infer<typeof depoimentoSchema>;
+
+export const enderecoCheckoutSchema = z.object({
+  logradouro: z.string().trim().min(2, "Informe a rua/avenida"),
+  numero: z.string().trim().min(1, "Informe o número"),
+  complemento: z.string().trim().optional(),
+  bairro: z.string().trim().min(2, "Informe o bairro"),
+  cidade: z.string().trim().min(2, "Informe a cidade"),
+  estado: z.string().trim().length(2, "Use a sigla do estado (ex: SP)"),
+  telefone: z.string().trim().min(8, "Informe um telefone válido"),
+});
+
+export type EnderecoCheckoutFormData = z.infer<typeof enderecoCheckoutSchema>;
