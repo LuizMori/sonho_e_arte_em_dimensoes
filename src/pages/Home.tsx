@@ -136,7 +136,6 @@ export function Home() {
                       categoriaNome={categoria?.nome}
                       imagemUrl={capa?.url}
                       imagemAlt={capa?.alt || produto.nome}
-                      imageAspect={index % 3 === 0 ? "aspect-[4/5]" : "aspect-[3/4]"}
                     />
                   </Reveal>
                 );

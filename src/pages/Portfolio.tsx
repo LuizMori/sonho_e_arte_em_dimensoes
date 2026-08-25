@@ -7,8 +7,6 @@ import { supabase } from "@/lib/supabaseClient";
 import { categorias } from "@/data/categorias";
 import type { ProdutoComImagens } from "@/types";
 
-const aspectPattern = ["aspect-[4/5]", "aspect-[3/4]", "aspect-square", "aspect-[4/5]"];
-
 export function Portfolio() {
   usePageMeta(
     "Portfólio | Sonho e Arte em Dimensões",
@@ -61,18 +59,13 @@ export function Portfolio() {
               const categoria = categorias.find((c) => c.slug === produto.categoria);
               const capa = produto.product_images[0];
               return (
-                <Reveal
-                  key={produto.slug}
-                  delay={(index % 6) * 60}
-                  className={index % 5 === 2 ? "lg:mt-16" : undefined}
-                >
+                <Reveal key={produto.slug} delay={(index % 6) * 60}>
                   <ProjectCard
                     to={`/portfolio/${produto.slug}`}
                     nome={produto.nome}
                     categoriaNome={categoria?.nome}
                     imagemUrl={capa?.url}
                     imagemAlt={capa?.alt || produto.nome}
-                    imageAspect={aspectPattern[index % aspectPattern.length]}
                   />
                 </Reveal>
               );

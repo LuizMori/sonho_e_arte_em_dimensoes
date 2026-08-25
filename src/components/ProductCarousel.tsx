@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import type { TouchEvent } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import type { ProjetoImagem } from "@/types";
 
+const LIMIAR_SWIPE_PX = 40;
+
 export function ProductCarousel({ imagens, nomeProduto }: { imagens: ProjetoImagem[]; nomeProduto: string }) {
   const [indice, setIndice] = useState(0);
+  const inicioToqueX = useRef<number | null>(null);
 
   if (imagens.length === 0) return null;
 
@@ -12,13 +16,30 @@ export function ProductCarousel({ imagens, nomeProduto }: { imagens: ProjetoImag
   const anterior = () => setIndice((i) => (i - 1 + imagens.length) % imagens.length);
   const proxima = () => setIndice((i) => (i + 1) % imagens.length);
 
+  const handleTouchStart = (event: TouchEvent) => {
+    inicioToqueX.current = event.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (event: TouchEvent) => {
+    if (inicioToqueX.current === null) return;
+    const delta = event.changedTouches[0].clientX - inicioToqueX.current;
+    inicioToqueX.current = null;
+    if (delta > LIMIAR_SWIPE_PX) anterior();
+    else if (delta < -LIMIAR_SWIPE_PX) proxima();
+  };
+
   return (
     <Reveal>
-      <div className="relative">
+      <div
+        className="relative aspect-[4/5] sm:aspect-[16/10] overflow-hidden bg-neutral-light/40"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         <img
           src={atual.url}
           alt={atual.alt || nomeProduto}
-          className="w-full h-auto max-h-[80vh] object-cover"
+          className="w-full h-full object-cover select-none"
+          draggable={false}
         />
 
         {imagens.length > 1 && (
