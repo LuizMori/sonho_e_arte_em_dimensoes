@@ -1,6 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
-import { cotarFrete } from "../../src/lib/shipping/melhorEnvio";
 
 interface QuoteItemPayload {
   productId: string;
@@ -10,6 +9,79 @@ interface QuoteItemPayload {
 interface QuotePayload {
   cepDestino: string;
   itens: QuoteItemPayload[];
+}
+
+interface MelhorEnvioOpcao {
+  id: number;
+  name: string;
+  price: string;
+  delivery_time: number;
+  company?: { name: string };
+  error?: string;
+}
+
+interface OpcaoFrete {
+  id: string;
+  nome: string;
+  transportadora: string;
+  valor: number;
+  prazoDias: number;
+}
+
+interface ItemFrete {
+  quantidade: number;
+  pesoKg: number;
+  alturaCm: number;
+  larguraCm: number;
+  comprimentoCm: number;
+}
+
+async function cotarFrete(cepOrigem: string, cepDestino: string, itens: ItemFrete[]): Promise<OpcaoFrete[]> {
+  const token = process.env.MELHOR_ENVIO_TOKEN;
+  if (!token) throw new Error("MELHOR_ENVIO_TOKEN não configurado");
+
+  const baseUrl = process.env.MELHOR_ENVIO_API_URL || "https://melhorenvio.com.br/api/v2/me/shipment/calculate";
+
+  const body = {
+    from: { postal_code: cepOrigem.replace(/\D/g, "") },
+    to: { postal_code: cepDestino.replace(/\D/g, "") },
+    products: itens.map((item, index) => ({
+      id: String(index),
+      width: item.larguraCm,
+      height: item.alturaCm,
+      length: item.comprimentoCm,
+      weight: item.pesoKg,
+      quantity: item.quantidade,
+      insurance_value: 0,
+    })),
+  };
+
+  const response = await fetch(baseUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+      "User-Agent": "Sonho e Arte em Dimensões (contato@sonhoearte3d.com.br)",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Melhor Envio respondeu ${response.status}`);
+  }
+
+  const data = (await response.json()) as MelhorEnvioOpcao[];
+
+  return data
+    .filter((opcao) => !opcao.error && opcao.price)
+    .map((opcao) => ({
+      id: String(opcao.id),
+      nome: opcao.name,
+      transportadora: opcao.company?.name ?? "",
+      valor: Number(opcao.price),
+      prazoDias: opcao.delivery_time,
+    }));
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -48,7 +120,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       throw error ?? new Error("Produtos não encontrados");
     }
 
-    const itensFrete = itens.map((item) => {
+    const itensFrete: ItemFrete[] = itens.map((item) => {
       const produto = produtos.find((p) => p.id === item.productId);
       if (!produto) throw new Error(`Produto ${item.productId} não encontrado`);
       return {
@@ -60,7 +132,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       };
     });
 
-    const opcoes = await cotarFrete({ cepOrigem, cepDestino, itens: itensFrete });
+    const opcoes = await cotarFrete(cepOrigem, cepDestino, itensFrete);
     res.status(200).json({ opcoes });
   } catch (err) {
     console.error("Erro ao cotar frete:", err);
