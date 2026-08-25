@@ -30,6 +30,8 @@ export function AdminProdutoForm() {
   const [carregando, setCarregando] = useState(editando);
   const [imagens, setImagens] = useState<ProdutoImagemDb[]>([]);
   const [enviandoImagem, setEnviandoImagem] = useState(false);
+  const [estoqueOriginal, setEstoqueOriginal] = useState<number | null>(null);
+  const [avisosPendentes, setAvisosPendentes] = useState<number | null>(null);
 
   const {
     register,
@@ -45,9 +47,14 @@ export function AdminProdutoForm() {
     if (!id) return;
 
     (async () => {
-      const [{ data: produto }, { data: imgs }] = await Promise.all([
+      const [{ data: produto }, { data: imgs }, { count: pendentes }] = await Promise.all([
         supabase.from("products").select("*").eq("id", id).single(),
         supabase.from("product_images").select("*").eq("product_id", id).order("ordem"),
+        supabase
+          .from("stock_notifications")
+          .select("id", { count: "exact", head: true })
+          .eq("product_id", id)
+          .eq("notificado", false),
       ]);
 
       if (produto) {
@@ -64,11 +71,29 @@ export function AdminProdutoForm() {
           stock: produto.stock,
           ativo: produto.ativo,
         });
+        setEstoqueOriginal(produto.stock);
       }
       setImagens(imgs ?? []);
+      setAvisosPendentes(pendentes ?? 0);
       setCarregando(false);
     })();
   }, [id, reset]);
+
+  const notificarReposicao = async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session || !id) return;
+    try {
+      await fetch("/api/stock/notify-restock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ productId: id }),
+      });
+    } catch {
+      // silencioso: falha no aviso não deve travar o fluxo de salvar o produto
+    }
+  };
 
   const onSubmit = async (data: ProdutoFormData) => {
     setStatus("loading");
@@ -94,6 +119,10 @@ export function AdminProdutoForm() {
       if (error) {
         showToast({ title: "Não foi possível salvar", description: error.message, variant: "error" });
         return;
+      }
+
+      if (estoqueOriginal === 0 && data.stock > 0) {
+        notificarReposicao();
       }
 
       showToast({ title: "Produto atualizado", variant: "success" });
@@ -202,6 +231,11 @@ export function AdminProdutoForm() {
                 <Label htmlFor="stock">Estoque</Label>
                 <Input id="stock" type="number" step="1" min="0" {...register("stock")} />
                 <FieldError message={errors.stock?.message} />
+                {!!avisosPendentes && (
+                  <p className="text-xs text-navy/50 mt-2">
+                    {avisosPendentes} cliente(s) aguardando aviso de reposição.
+                  </p>
+                )}
               </div>
             </div>
 

@@ -39,6 +39,9 @@ com a CLI é uma opção futura.
 11. `0011_endereco_pedido.sql` — adiciona `telefone` a `orders` e reescreve `criar_pedido` para receber
     o endereço completo (mesclado em `endereco_json`) e o telefone de contato, com defaults para não
     quebrar a chamada antiga durante a janela entre migration e deploy.
+12. `0012_aviso_estoque.sql` — tabela `stock_notifications`: cliente pede para ser avisado por e-mail
+    quando um produto sem estoque for reabastecido. Inserção pública, leitura só do admin; índice único
+    parcial evita pedido duplicado enquanto o aviso ainda está pendente. Sem pré-requisito manual.
 
 Depois de rodar a migração 1 e o dono da loja se cadastrar pelo fluxo normal (`/cadastro`), promova a
 conta a admin rodando no SQL Editor:

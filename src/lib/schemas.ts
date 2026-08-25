@@ -109,3 +109,9 @@ export const enderecoCheckoutSchema = z.object({
 });
 
 export type EnderecoCheckoutFormData = z.infer<typeof enderecoCheckoutSchema>;
+
+export const avisoEstoqueSchema = z.object({
+  email: z.string().trim().email("Informe um e-mail válido"),
+});
+
+export type AvisoEstoqueFormData = z.infer<typeof avisoEstoqueSchema>;

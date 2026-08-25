@@ -137,6 +137,14 @@ export interface PageView {
   created_at: string;
 }
 
+export interface StockNotification {
+  id: string;
+  product_id: string;
+  email: string;
+  notificado: boolean;
+  created_at: string;
+}
+
 export interface Testimonial {
   id: string;
   tipo: TestimonialTipo;

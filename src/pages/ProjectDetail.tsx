@@ -1,15 +1,74 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { Reveal } from "@/components/Reveal";
 import { ProductCarousel } from "@/components/ProductCarousel";
 import { Button } from "@/components/ui/Button";
-import { Label } from "@/components/ui/Input";
+import { Input, Label, FieldError } from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
 import { supabase } from "@/lib/supabaseClient";
 import { useCart } from "@/lib/CartProvider";
+import { useAuth } from "@/lib/AuthProvider";
 import { categorias } from "@/data/categorias";
+import { avisoEstoqueSchema, type AvisoEstoqueFormData } from "@/lib/schemas";
 import type { ProdutoComImagens } from "@/types";
+
+function AvisoEstoque({ produtoId }: { produtoId: string }) {
+  const { user } = useAuth();
+  const [enviado, setEnviado] = useState(false);
+  const [status, setStatus] = useState<"idle" | "loading">("idle");
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<AvisoEstoqueFormData>({
+    resolver: zodResolver(avisoEstoqueSchema),
+    defaultValues: { email: user?.email ?? "" },
+  });
+
+  if (enviado) {
+    return (
+      <p className="text-navy/70">Vamos te avisar por e-mail assim que este produto voltar ao estoque!</p>
+    );
+  }
+
+  const onSubmit = async (data: AvisoEstoqueFormData) => {
+    setStatus("loading");
+    const { error } = await supabase
+      .from("stock_notifications")
+      .insert({ product_id: produtoId, email: data.email });
+    setStatus("idle");
+
+    if (error) {
+      if (error.code === "23505") {
+        setEnviado(true);
+        return;
+      }
+      return;
+    }
+
+    setEnviado(true);
+  };
+
+  return (
+    <div>
+      <p className="text-navy/60 mb-4">Sem estoque no momento. Quer ser avisado quando chegar?</p>
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3" noValidate>
+        <div>
+          <Label htmlFor="email-aviso">E-mail</Label>
+          <Input id="email-aviso" type="email" placeholder="seu@email.com" {...register("email")} />
+          <FieldError message={errors.email?.message} />
+        </div>
+        <Button type="submit" variant="outline" disabled={status === "loading"}>
+          {status === "loading" ? "Enviando..." : "Avisar quando chegar"}
+        </Button>
+      </form>
+    </div>
+  );
+}
 
 export function ProjectDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -140,7 +199,7 @@ export function ProjectDetail() {
               const restante = Math.max(0, produto.stock - jaNoCarrinho);
 
               if (produto.stock === 0) {
-                return <p className="text-navy/60">Sem estoque no momento.</p>;
+                return <AvisoEstoque produtoId={produto.id} />;
               }
 
               if (restante === 0) {

@@ -200,10 +200,26 @@ export function AdminProdutoImportar() {
     URL.revokeObjectURL(url);
   };
 
+  const notificarReposicao = async (produtoId: string, token: string) => {
+    try {
+      await fetch("/api/stock/notify-restock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ productId: produtoId }),
+      });
+    } catch {
+      // silencioso: falha no aviso não deve travar a importação
+    }
+  };
+
   const importar = async () => {
     if (validas.length === 0) return;
     setImportando(true);
     setProgresso({ atual: 0, total: validas.length });
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
     let criados = 0;
     let atualizados = 0;
@@ -230,7 +246,7 @@ export function AdminProdutoImportar() {
 
       const { data: existente } = await supabase
         .from("products")
-        .select("id")
+        .select("id, stock")
         .eq("slug", dados.slug)
         .maybeSingle();
 
@@ -244,6 +260,9 @@ export function AdminProdutoImportar() {
         }
         produtoId = existente.id;
         atualizados++;
+        if (existente.stock === 0 && dados.stock > 0 && session) {
+          notificarReposicao(existente.id, session.access_token);
+        }
       } else {
         const { data: novo, error } = await supabase
           .from("products")
