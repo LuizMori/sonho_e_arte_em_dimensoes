@@ -29,17 +29,6 @@ export interface EtapaProcesso {
   descricao: string;
 }
 
-export interface Post {
-  slug: string;
-  titulo: string;
-  resumo: string;
-  conteudo: string[];
-  categoria: string;
-  data: string;
-  imagem: ProjetoImagem;
-  autor: string;
-}
-
 export interface InformacaoInstitucional {
   titulo: string;
   paragrafos: string[];
@@ -119,4 +108,22 @@ export interface OrderItemDb {
 
 export interface OrderItemComProduto extends OrderItemDb {
   products: Pick<Produto, "nome" | "slug"> | null;
+}
+
+export interface OrderComRelacoes extends Order {
+  profiles: Pick<Profile, "nome"> | null;
+  order_items: OrderItemComProduto[];
+}
+
+export type TestimonialTipo = "texto" | "print";
+
+export interface Testimonial {
+  id: string;
+  tipo: TestimonialTipo;
+  nome_cliente: string;
+  texto: string | null;
+  nota: number | null;
+  imagem_url: string | null;
+  aprovado: boolean;
+  created_at: string;
 }

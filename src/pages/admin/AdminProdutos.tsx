@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { Reveal } from "@/components/Reveal";
+import { AdminNav } from "@/components/admin/AdminNav";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { supabase } from "@/lib/supabaseClient";
@@ -52,6 +53,8 @@ export function AdminProdutos() {
             <Button>Novo produto</Button>
           </Link>
         </Reveal>
+
+        <AdminNav />
 
         {carregando ? (
           <p className="text-navy/60">Carregando...</p>

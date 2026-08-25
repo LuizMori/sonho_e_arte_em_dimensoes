@@ -21,6 +21,10 @@ com a CLI é uma opção futura.
    em Database > Extensions antes de rodar este arquivo.
 5. `0005_pagamento.sql` — função `confirmar_pagamento_pedido`, chamada só pelo webhook do Mercado Pago:
    decrementa o estoque de verdade, libera a reserva e marca o pedido como pago (idempotente).
+6. `0006_depoimentos.sql` — tabela `testimonials` (depoimentos de clientes com nota, ou prints de feedback
+   publicados pelo admin) e RLS que só libera leitura pública para linhas aprovadas. Antes ou depois de
+   rodar este arquivo, crie o bucket `testimonial-images` em Storage > New bucket, marcado como
+   **público**.
 
 Depois de rodar a migração 1 e o dono da loja se cadastrar pelo fluxo normal (`/cadastro`), promova a
 conta a admin rodando no SQL Editor:

@@ -13,8 +13,6 @@ import { ProjectDetail } from "@/pages/ProjectDetail";
 import { Servicos } from "@/pages/Servicos";
 import { ComoFunciona } from "@/pages/ComoFunciona";
 import { Orcamento } from "@/pages/Orcamento";
-import { Blog } from "@/pages/Blog";
-import { BlogPost } from "@/pages/BlogPost";
 import { Contato } from "@/pages/Contato";
 import { Login } from "@/pages/Login";
 import { Cadastro } from "@/pages/Cadastro";
@@ -26,6 +24,9 @@ import { Checkout } from "@/pages/Checkout";
 import { Pedido } from "@/pages/Pedido";
 import { AdminProdutos } from "@/pages/admin/AdminProdutos";
 import { AdminProdutoForm } from "@/pages/admin/AdminProdutoForm";
+import { AdminPedidos } from "@/pages/admin/AdminPedidos";
+import { AdminBalanco } from "@/pages/admin/AdminBalanco";
+import { AdminDepoimentos } from "@/pages/admin/AdminDepoimentos";
 import { NotFound } from "@/pages/NotFound";
 
 function App() {
@@ -43,8 +44,6 @@ function App() {
             <Route path="/servicos" element={<Servicos />} />
             <Route path="/como-funciona" element={<ComoFunciona />} />
             <Route path="/orcamento" element={<Orcamento />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/contato" element={<Contato />} />
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Cadastro />} />
@@ -89,6 +88,30 @@ function App() {
               element={
                 <RequireAdmin>
                   <AdminProdutoForm />
+                </RequireAdmin>
+              }
+            />
+            <Route
+              path="/admin/pedidos"
+              element={
+                <RequireAdmin>
+                  <AdminPedidos />
+                </RequireAdmin>
+              }
+            />
+            <Route
+              path="/admin/balanco"
+              element={
+                <RequireAdmin>
+                  <AdminBalanco />
+                </RequireAdmin>
+              }
+            />
+            <Route
+              path="/admin/depoimentos"
+              element={
+                <RequireAdmin>
+                  <AdminDepoimentos />
                 </RequireAdmin>
               }
             />

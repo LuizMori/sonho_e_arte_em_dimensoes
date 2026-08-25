@@ -7,6 +7,7 @@ import { ProjectCard } from "@/components/ProjectCard";
 import { ScrollIndicator } from "@/components/ScrollIndicator";
 import { DecorCurve, DecorStar } from "@/components/Decor";
 import { HeroArt } from "@/components/HeroArt";
+import { TestimonialsSection } from "@/components/TestimonialsSection";
 import { Button } from "@/components/ui/Button";
 import { supabase } from "@/lib/supabaseClient";
 import { categorias } from "@/data/categorias";
@@ -260,6 +261,8 @@ export function Home() {
           </div>
         </div>
       </section>
+
+      <TestimonialsSection />
 
       {/* CTA final */}
       <section className="py-28 md:py-36 bg-navy-deep text-cream-light text-center relative overflow-hidden">

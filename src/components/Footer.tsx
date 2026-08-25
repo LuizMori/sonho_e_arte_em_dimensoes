@@ -14,7 +14,6 @@ const colunas = [
   {
     titulo: "Estúdio",
     links: [
-      { to: "/blog", label: "Blog" },
       { to: "/orcamento", label: "Orçamento" },
       { to: "/contato", label: "Contato" },
     ],
