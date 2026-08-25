@@ -29,9 +29,9 @@ export function ProductCarousel({ imagens, nomeProduto }: { imagens: ProjetoImag
   };
 
   return (
-    <Reveal>
+    <Reveal className="max-w-md mx-auto lg:mx-0">
       <div
-        className="relative aspect-[4/5] sm:aspect-[16/10] overflow-hidden bg-neutral-light/40"
+        className="relative aspect-[4/3] overflow-hidden bg-neutral-light/40"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
