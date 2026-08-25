@@ -94,82 +94,88 @@ export function ProjectDetail() {
         </div>
       </section>
 
-      <section className="pt-8 pb-24 md:pb-32">
-        <div className="container grid grid-cols-1 lg:grid-cols-[440px_1fr] gap-12 lg:gap-16 items-start">
-          <div>
-            {produto.product_images.length > 0 && (
-              <ProductCarousel
-                imagens={produto.product_images.map((imagem) => ({ url: imagem.url, alt: imagem.alt }))}
-                nomeProduto={produto.nome}
-              />
-            )}
-          </div>
+      <section className="pt-8 pb-16 md:pb-20">
+        <div className="container">
+          <Reveal className="mb-8">
+            <h1 className="font-display text-4xl sm:text-5xl tracking-tightest text-navy leading-[1.05]">
+              {produto.nome}
+            </h1>
+          </Reveal>
 
-          <div>
-            <Reveal className="mb-8">
-              <h1 className="font-display text-4xl sm:text-5xl tracking-tightest text-navy leading-[1.05]">
-                {produto.nome}
-              </h1>
-            </Reveal>
+          <div className="grid grid-cols-1 lg:grid-cols-[440px_1fr] gap-12 lg:gap-16 items-start">
+            <div>
+              {produto.product_images.length > 0 && (
+                <ProductCarousel
+                  imagens={produto.product_images.map((imagem) => ({ url: imagem.url, alt: imagem.alt }))}
+                  nomeProduto={produto.nome}
+                />
+              )}
+            </div>
 
             <Reveal>
-              <dl className="space-y-6">
-                {metadados.map((item) => (
-                  <div key={item.label} className="border-b border-neutral-light pb-4">
-                    <dt className="label-caps text-neutral">{item.label}</dt>
-                    <dd className="text-navy text-lg mt-1">{item.valor}</dd>
-                  </div>
-                ))}
-
-                {(() => {
-                  const jaNoCarrinho = items.find((item) => item.productId === produto.id)?.quantidade ?? 0;
-                  const restante = Math.max(0, produto.stock - jaNoCarrinho);
-
-                  if (produto.stock === 0) {
-                    return <p className="text-navy/60 pt-2">Sem estoque no momento.</p>;
-                  }
-
-                  if (restante === 0) {
-                    return <p className="text-navy/60 pt-2">Todo o estoque disponível já está no seu carrinho.</p>;
-                  }
-
-                  return (
-                    <div className="pt-2">
-                      <div className="flex items-center gap-4 mb-4">
-                        <Label htmlFor="quantidade">Quantidade</Label>
-                        <input
-                          id="quantidade"
-                          type="number"
-                          min={1}
-                          max={restante}
-                          value={Math.min(quantidade, restante)}
-                          onChange={(e) => setQuantidade(Math.max(1, Math.min(Number(e.target.value), restante)))}
-                          className="w-16 bg-transparent border-b border-neutral-light py-1 text-navy focus:outline-none focus:border-magenta"
-                        />
-                      </div>
-                      <Button
-                        className="w-full"
-                        onClick={() => {
-                          const quantidadeValida = Math.max(1, Math.min(quantidade, restante));
-                          addItem(produto.id, quantidadeValida);
-                          showToast({ title: "Adicionado ao carrinho", description: produto.nome, variant: "success" });
-                          setQuantidade(1);
-                        }}
-                      >
-                        Adicionar ao carrinho
-                      </Button>
-                    </div>
-                  );
-                })()}
-              </dl>
-            </Reveal>
-
-            <Reveal className="mt-10">
               <p className="text-navy/80 text-lg leading-relaxed font-display font-light whitespace-pre-line">
                 {produto.descricao}
               </p>
             </Reveal>
           </div>
+        </div>
+      </section>
+
+      <section className="pb-24 md:pb-32">
+        <div className="container">
+          <Reveal>
+            <dl className="grid grid-cols-2 sm:grid-cols-5 gap-x-8 gap-y-6 border-y border-neutral-light py-8">
+              {metadados.map((item) => (
+                <div key={item.label}>
+                  <dt className="label-caps text-neutral">{item.label}</dt>
+                  <dd className="text-navy text-lg mt-1">{item.valor}</dd>
+                </div>
+              ))}
+            </dl>
+          </Reveal>
+
+          <Reveal className="max-w-xs mt-10">
+            {(() => {
+              const jaNoCarrinho = items.find((item) => item.productId === produto.id)?.quantidade ?? 0;
+              const restante = Math.max(0, produto.stock - jaNoCarrinho);
+
+              if (produto.stock === 0) {
+                return <p className="text-navy/60">Sem estoque no momento.</p>;
+              }
+
+              if (restante === 0) {
+                return <p className="text-navy/60">Todo o estoque disponível já está no seu carrinho.</p>;
+              }
+
+              return (
+                <div>
+                  <div className="flex items-center gap-4 mb-4">
+                    <Label htmlFor="quantidade">Quantidade</Label>
+                    <input
+                      id="quantidade"
+                      type="number"
+                      min={1}
+                      max={restante}
+                      value={Math.min(quantidade, restante)}
+                      onChange={(e) => setQuantidade(Math.max(1, Math.min(Number(e.target.value), restante)))}
+                      className="w-16 bg-transparent border-b border-neutral-light py-1 text-navy focus:outline-none focus:border-magenta"
+                    />
+                  </div>
+                  <Button
+                    className="w-full"
+                    onClick={() => {
+                      const quantidadeValida = Math.max(1, Math.min(quantidade, restante));
+                      addItem(produto.id, quantidadeValida);
+                      showToast({ title: "Adicionado ao carrinho", description: produto.nome, variant: "success" });
+                      setQuantidade(1);
+                    }}
+                  >
+                    Adicionar ao carrinho
+                  </Button>
+                </div>
+              );
+            })()}
+          </Reveal>
         </div>
       </section>
 
