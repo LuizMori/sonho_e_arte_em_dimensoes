@@ -26,6 +26,7 @@ import { Checkout } from "@/pages/Checkout";
 import { Pedido } from "@/pages/Pedido";
 import { AdminProdutos } from "@/pages/admin/AdminProdutos";
 import { AdminProdutoForm } from "@/pages/admin/AdminProdutoForm";
+import { AdminProdutoImportar } from "@/pages/admin/AdminProdutoImportar";
 import { AdminPedidos } from "@/pages/admin/AdminPedidos";
 import { AdminBalanco } from "@/pages/admin/AdminBalanco";
 import { AdminDepoimentos } from "@/pages/admin/AdminDepoimentos";
@@ -86,6 +87,14 @@ function App() {
               element={
                 <RequireAdmin>
                   <AdminProdutoForm />
+                </RequireAdmin>
+              }
+            />
+            <Route
+              path="/admin/produtos/importar"
+              element={
+                <RequireAdmin>
+                  <AdminProdutoImportar />
                 </RequireAdmin>
               }
             />

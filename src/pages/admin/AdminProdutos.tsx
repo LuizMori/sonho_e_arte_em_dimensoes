@@ -49,9 +49,14 @@ export function AdminProdutos() {
               Produtos
             </h1>
           </div>
-          <Link to="/admin/produtos/novo">
-            <Button>Novo produto</Button>
-          </Link>
+          <div className="flex gap-4">
+            <Link to="/admin/produtos/importar">
+              <Button variant="outline">Importar CSV</Button>
+            </Link>
+            <Link to="/admin/produtos/novo">
+              <Button>Novo produto</Button>
+            </Link>
+          </div>
         </Reveal>
 
         <AdminNav />
