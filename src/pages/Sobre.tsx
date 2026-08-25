@@ -5,7 +5,7 @@ import { SectionTitle } from "@/components/SectionTitle";
 import { DecorStar } from "@/components/Decor";
 import { historiaSobre } from "@/data/institucional";
 import imagemDetalhe from "@/assets/sobre/peca-detalhe.jpeg";
-import imagemBancada from "@/assets/sobre/peca-bancada.jpeg";
+import imagemCoracaoCerebro from "@/assets/sobre/peca-coracao-cerebro.jpeg";
 
 const valores = [
   {
@@ -46,8 +46,8 @@ export function Sobre() {
       </section>
 
       <section className="pb-24 md:pb-32">
-        <div className="container grid grid-cols-1 lg:grid-cols-[0.8fr_1fr] gap-12 lg:gap-20">
-          <Reveal className="lg:sticky lg:top-32 self-start">
+        <div className="container grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-12 lg:gap-12">
+          <Reveal className="lg:sticky lg:top-32 self-start w-full max-w-xs lg:w-72">
             <img
               src={imagemDetalhe}
               alt="Peça impressa em 3D, detalhe de acabamento do estúdio"
@@ -97,12 +97,12 @@ export function Sobre() {
 
       <section className="py-24 md:py-32 bg-cream-light">
         <div className="container grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          <Reveal>
+          <Reveal className="aspect-[4/3] overflow-hidden">
             <img
-              src={imagemBancada}
-              alt="Peça personalizada impressa em 3D sobre bancada de madeira"
+              src={imagemCoracaoCerebro}
+              alt="Figuras de coração e cérebro impressas em 3D, de mãos dadas"
               loading="lazy"
-              className="w-full h-auto object-cover"
+              className="w-full h-full object-cover"
             />
           </Reveal>
           <Reveal delay={100}>
