@@ -109,7 +109,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       body: JSON.stringify({
         items,
         external_reference: order.id,
-        notification_url: `${origin}/api/mercadopago/webhook`,
+        // Sem notification_url aqui de propósito: definir por preferência tem prioridade sobre a
+        // URL configurada em Suas integrações > Webhooks, mas só essa última tem a assinatura
+        // secreta garantida para validar x-signature. Deixamos o Mercado Pago usar a URL do painel.
         back_urls: {
           success: `${origin}/pedido/${order.id}`,
           failure: `${origin}/pedido/${order.id}`,
