@@ -14,6 +14,9 @@ import { categorias } from "@/data/categorias";
 import { servicos } from "@/data/servicos";
 import { filosofia } from "@/data/institucional";
 import type { ProdutoComImagens } from "@/types";
+import imagemColecionaveis from "@/assets/personalizacao/colecionaveis.jpeg";
+import imagemPresentes from "@/assets/personalizacao/presentes.jpeg";
+import imagemDecoracao from "@/assets/personalizacao/decoracao.jpeg";
 
 const dreamSteps = [
   {
@@ -35,18 +38,18 @@ const dreamSteps = [
 
 const personalizacaoImagens = [
   {
-    url: "https://images.unsplash.com/photo-1560343090-f0409e92791a?q=80&w=1200&auto=format&fit=crop",
-    alt: "Figuras colecionáveis personalizadas impressas em 3D",
+    url: imagemColecionaveis,
+    alt: "Colecionável personalizado impresso em 3D",
     nome: "Colecionáveis",
   },
   {
-    url: "https://images.unsplash.com/photo-1518281420975-50db6e5d0a97?q=80&w=1200&auto=format&fit=crop",
-    alt: "Porta retrato personalizado impresso em 3D",
+    url: imagemPresentes,
+    alt: "Quadro de retrato personalizado, presente feito sob medida",
     nome: "Presentes",
   },
   {
-    url: "https://images.unsplash.com/photo-1615529182904-14819c35db37?q=80&w=1200&auto=format&fit=crop",
-    alt: "Vaso decorativo personalizado impresso em 3D",
+    url: imagemDecoracao,
+    alt: "Objeto decorativo personalizado impresso em 3D",
     nome: "Decoração",
   },
 ];
