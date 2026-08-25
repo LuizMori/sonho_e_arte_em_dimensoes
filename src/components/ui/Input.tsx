@@ -1,5 +1,6 @@
-import { forwardRef } from "react";
+import { forwardRef, useState } from "react";
 import type { InputHTMLAttributes, TextareaHTMLAttributes, SelectHTMLAttributes } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const fieldStyles =
@@ -11,6 +12,31 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
   )
 );
 Input.displayName = "Input";
+
+export const PasswordInput = forwardRef<HTMLInputElement, Omit<InputHTMLAttributes<HTMLInputElement>, "type">>(
+  ({ className, ...props }, ref) => {
+    const [visivel, setVisivel] = useState(false);
+    return (
+      <div className="relative">
+        <input
+          ref={ref}
+          type={visivel ? "text" : "password"}
+          className={cn(fieldStyles, "pr-9", className)}
+          {...props}
+        />
+        <button
+          type="button"
+          onClick={() => setVisivel((v) => !v)}
+          aria-label={visivel ? "Ocultar senha" : "Mostrar senha"}
+          className="absolute right-0 top-1/2 -translate-y-1/2 text-neutral hover:text-navy transition-colors"
+        >
+          {visivel ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
+      </div>
+    );
+  }
+);
+PasswordInput.displayName = "PasswordInput";
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(
   ({ className, ...props }, ref) => (

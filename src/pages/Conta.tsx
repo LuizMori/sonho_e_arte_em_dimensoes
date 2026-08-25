@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { Reveal } from "@/components/Reveal";
-import { Input, Label, FieldError } from "@/components/ui/Input";
+import { PasswordInput, Label, FieldError } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/lib/AuthProvider";
@@ -115,12 +115,12 @@ export function Conta() {
               >
                 <div>
                   <Label htmlFor="senha">Nova senha</Label>
-                  <Input id="senha" type="password" {...registerSenha("senha")} />
+                  <PasswordInput id="senha" {...registerSenha("senha")} />
                   <FieldError message={erroSenha.senha?.message} />
                 </div>
                 <div>
                   <Label htmlFor="confirmarSenha">Confirmar nova senha</Label>
-                  <Input id="confirmarSenha" type="password" {...registerSenha("confirmarSenha")} />
+                  <PasswordInput id="confirmarSenha" {...registerSenha("confirmarSenha")} />
                   <FieldError message={erroSenha.confirmarSenha?.message} />
                 </div>
                 <div className="flex items-center gap-6">

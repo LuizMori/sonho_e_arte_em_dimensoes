@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { Reveal } from "@/components/Reveal";
-import { Input, Label, FieldError } from "@/components/ui/Input";
+import { Input, PasswordInput, Label, FieldError } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/lib/AuthProvider";
@@ -64,7 +64,7 @@ export function Login() {
 
             <div>
               <Label htmlFor="senha">Senha</Label>
-              <Input id="senha" type="password" placeholder="Sua senha" {...register("senha")} />
+              <PasswordInput id="senha" placeholder="Sua senha" {...register("senha")} />
               <FieldError message={errors.senha?.message} />
             </div>
 

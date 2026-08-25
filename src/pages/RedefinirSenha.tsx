@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { Reveal } from "@/components/Reveal";
-import { Input, Label, FieldError } from "@/components/ui/Input";
+import { PasswordInput, Label, FieldError } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/lib/AuthProvider";
@@ -61,15 +61,14 @@ export function RedefinirSenha() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 mt-14" noValidate>
             <div>
               <Label htmlFor="senha">Nova senha</Label>
-              <Input id="senha" type="password" placeholder="Crie uma nova senha" {...register("senha")} />
+              <PasswordInput id="senha" placeholder="Crie uma nova senha" {...register("senha")} />
               <FieldError message={errors.senha?.message} />
             </div>
 
             <div>
               <Label htmlFor="confirmarSenha">Confirmar nova senha</Label>
-              <Input
+              <PasswordInput
                 id="confirmarSenha"
-                type="password"
                 placeholder="Repita a nova senha"
                 {...register("confirmarSenha")}
               />
