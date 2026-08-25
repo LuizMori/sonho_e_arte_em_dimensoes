@@ -19,6 +19,8 @@ com a CLI é uma opção futura.
    (cria o pedido e reserva o estoque de forma atômica) e `expirar_reservas_vencidas`, agendada via
    `pg_cron` para rodar a cada 2 minutos. **Pré-requisito:** a extensão `pg_cron` precisa estar habilitada
    em Database > Extensions antes de rodar este arquivo.
+5. `0005_pagamento.sql` — função `confirmar_pagamento_pedido`, chamada só pelo webhook do Mercado Pago:
+   decrementa o estoque de verdade, libera a reserva e marca o pedido como pago (idempotente).
 
 Depois de rodar a migração 1 e o dono da loja se cadastrar pelo fluxo normal (`/cadastro`), promova a
 conta a admin rodando no SQL Editor:

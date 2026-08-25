@@ -16,7 +16,7 @@ export function ProjectDetail() {
   const [produto, setProduto] = useState<ProdutoComImagens | null | undefined>(undefined);
   const [proximo, setProximo] = useState<{ slug: string; nome: string } | null>(null);
   const [quantidade, setQuantidade] = useState(1);
-  const { addItem } = useCart();
+  const { items, addItem } = useCart();
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -124,35 +124,46 @@ export function ProjectDetail() {
                 </div>
               ))}
 
-              {produto.stock > 0 ? (
-                <div className="pt-2">
-                  <div className="flex items-center gap-4 mb-4">
-                    <Label htmlFor="quantidade">Quantidade</Label>
-                    <input
-                      id="quantidade"
-                      type="number"
-                      min={1}
-                      max={produto.stock}
-                      value={quantidade}
-                      onChange={(e) =>
-                        setQuantidade(Math.max(1, Math.min(Number(e.target.value), produto.stock)))
-                      }
-                      className="w-16 bg-transparent border-b border-neutral-light py-1 text-navy focus:outline-none focus:border-magenta"
-                    />
+              {(() => {
+                const jaNoCarrinho = items.find((item) => item.productId === produto.id)?.quantidade ?? 0;
+                const restante = Math.max(0, produto.stock - jaNoCarrinho);
+
+                if (produto.stock === 0) {
+                  return <p className="text-navy/60 pt-2">Sem estoque no momento.</p>;
+                }
+
+                if (restante === 0) {
+                  return <p className="text-navy/60 pt-2">Todo o estoque disponível já está no seu carrinho.</p>;
+                }
+
+                return (
+                  <div className="pt-2">
+                    <div className="flex items-center gap-4 mb-4">
+                      <Label htmlFor="quantidade">Quantidade</Label>
+                      <input
+                        id="quantidade"
+                        type="number"
+                        min={1}
+                        max={restante}
+                        value={Math.min(quantidade, restante)}
+                        onChange={(e) => setQuantidade(Math.max(1, Math.min(Number(e.target.value), restante)))}
+                        className="w-16 bg-transparent border-b border-neutral-light py-1 text-navy focus:outline-none focus:border-magenta"
+                      />
+                    </div>
+                    <Button
+                      className="w-full"
+                      onClick={() => {
+                        const quantidadeValida = Math.max(1, Math.min(quantidade, restante));
+                        addItem(produto.id, quantidadeValida);
+                        showToast({ title: "Adicionado ao carrinho", description: produto.nome, variant: "success" });
+                        setQuantidade(1);
+                      }}
+                    >
+                      Adicionar ao carrinho
+                    </Button>
                   </div>
-                  <Button
-                    className="w-full"
-                    onClick={() => {
-                      addItem(produto.id, quantidade);
-                      showToast({ title: "Adicionado ao carrinho", description: produto.nome, variant: "success" });
-                    }}
-                  >
-                    Adicionar ao carrinho
-                  </Button>
-                </div>
-              ) : (
-                <p className="text-navy/60 pt-2">Sem estoque no momento.</p>
-              )}
+                );
+              })()}
             </dl>
           </Reveal>
 

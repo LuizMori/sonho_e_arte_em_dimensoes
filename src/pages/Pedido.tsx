@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate, useParams } from "react-router-dom";
+import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { Reveal } from "@/components/Reveal";
 import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
 import { supabase } from "@/lib/supabaseClient";
 import type { Order, OrderItemComProduto } from "@/types";
 
@@ -18,22 +19,74 @@ const statusLabel: Record<Order["status"], string> = {
 
 export function Pedido() {
   const { orderId } = useParams<{ orderId: string }>();
+  const [searchParams] = useSearchParams();
+  const { showToast } = useToast();
   usePageMeta("Pedido | Sonho e Arte em Dimensões", "Acompanhe os detalhes do seu pedido.");
 
   const [order, setOrder] = useState<Order | null | undefined>(undefined);
   const [itens, setItens] = useState<OrderItemComProduto[]>([]);
+  const [pagando, setPagando] = useState(false);
+
+  const buscarPedido = async () => {
+    if (!orderId) return;
+    const [{ data: pedido }, { data: itensPedido }] = await Promise.all([
+      supabase.from("orders").select("*").eq("id", orderId).maybeSingle(),
+      supabase.from("order_items").select("*, products(nome, slug)").eq("order_id", orderId),
+    ]);
+    setOrder((pedido as Order) ?? null);
+    setItens((itensPedido as OrderItemComProduto[]) ?? []);
+    return pedido as Order | null;
+  };
 
   useEffect(() => {
-    if (!orderId) return;
-    (async () => {
-      const [{ data: pedido }, { data: itensPedido }] = await Promise.all([
-        supabase.from("orders").select("*").eq("id", orderId).maybeSingle(),
-        supabase.from("order_items").select("*, products(nome, slug)").eq("order_id", orderId),
-      ]);
-      setOrder((pedido as Order) ?? null);
-      setItens((itensPedido as OrderItemComProduto[]) ?? []);
-    })();
+    buscarPedido();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
+
+  useEffect(() => {
+    if (searchParams.get("status") !== "approved") return;
+
+    let tentativas = 0;
+    const intervalo = setInterval(async () => {
+      tentativas += 1;
+      const pedido = await buscarPedido();
+      if (pedido?.status === "paid" || tentativas >= 6) {
+        clearInterval(intervalo);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, 2000);
+
+    return () => clearInterval(intervalo);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, orderId]);
+
+  const iniciarPagamento = async () => {
+    if (!order) return;
+    setPagando(true);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const response = await fetch("/api/mercadopago/create-preference", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ orderId: order.id }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.error || "Não foi possível iniciar o pagamento");
+
+      window.location.href = data.initPoint;
+    } catch (err) {
+      showToast({
+        title: "Não foi possível iniciar o pagamento",
+        description: err instanceof Error ? err.message : undefined,
+        variant: "error",
+      });
+      setPagando(false);
+    }
+  };
 
   if (order === null) {
     return <Navigate to="/conta" replace />;
@@ -53,7 +106,7 @@ export function Pedido() {
     <section className="pt-40 pb-24 md:pt-48 md:pb-32">
       <div className="container max-w-2xl">
         <Reveal className="mb-14">
-          <p className="label-caps text-magenta mb-6">Pedido confirmado</p>
+          <p className="label-caps text-magenta mb-6">Pedido</p>
           <h1 className="font-display text-4xl sm:text-5xl tracking-tightest text-navy leading-[1.05]">
             Pedido #{order.id.slice(0, 8)}
           </h1>
@@ -83,16 +136,26 @@ export function Pedido() {
           </div>
         </Reveal>
 
-        {order.status === "pending_payment" && order.reserved_until && (
+        {order.status === "pending_payment" && (
           <Reveal className="bg-cream-light border border-neutral-light rounded-xl px-6 py-5 mb-10">
-            <p className="text-navy">
-              Sua reserva de estoque expira em{" "}
-              <strong>{new Date(order.reserved_until).toLocaleString("pt-BR")}</strong>. O pagamento ainda não está
-              disponível diretamente pelo site — em breve você poderá concluir por aqui.
+            {order.reserved_until && (
+              <p className="text-navy mb-4">
+                Sua reserva de estoque expira em{" "}
+                <strong>{new Date(order.reserved_until).toLocaleString("pt-BR")}</strong>. Pague antes desse
+                horário para garantir seu pedido.
+              </p>
+            )}
+            <Button onClick={iniciarPagamento} disabled={pagando} className="w-full sm:w-auto">
+              {pagando ? "Redirecionando..." : "Pagar agora"}
+            </Button>
+          </Reveal>
+        )}
+
+        {searchParams.get("status") === "approved" && order.status === "pending_payment" && (
+          <Reveal className="mb-10">
+            <p className="text-navy/60">
+              Estamos confirmando seu pagamento com o Mercado Pago, isso pode levar alguns segundos...
             </p>
-            <Link to="/contato" className="text-magenta label-caps inline-block mt-4">
-              Falar com a gente para confirmar o pagamento
-            </Link>
           </Reveal>
         )}
 

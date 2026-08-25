@@ -57,6 +57,18 @@ nunca fica exposto no frontend). Configure em Vercel > Settings > Environment Va
 - `CEP_ORIGEM`: CEP de origem dos envios (endereço do estúdio), sem traço.
 - `MELHOR_ENVIO_API_URL` (opcional): use a URL de sandbox durante testes.
 
+O pagamento é feito via [Mercado Pago](https://www.mercadopago.com.br) (Checkout Pro). A confirmação do
+pedido como pago **só acontece pelo webhook** (`api/mercadopago/webhook.ts`), que valida a assinatura da
+notificação e sempre reconsulta a Payment API antes de confiar no status — nunca pelo retorno do cliente
+ao site. Configure em Vercel > Settings > Environment Variables:
+
+- `MP_ACCESS_TOKEN`: access token gerado em Suas integrações > Credenciais no painel do Mercado Pago.
+  Use um token de teste (`TEST-...`) para testar sem cobrar de verdade.
+- `MP_WEBHOOK_SECRET`: assinatura secreta configurada em Suas integrações > Webhooks.
+
+Depois de configurar as credenciais, cadastre a URL do webhook no painel do Mercado Pago (Suas
+integrações > Webhooks): `https://sonhoearte3d.com.br/api/mercadopago/webhook`.
+
 ## Stack
 
 - React + Vite + TypeScript
