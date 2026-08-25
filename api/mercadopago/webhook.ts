@@ -1,6 +1,60 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { Resend } from "resend";
+
+const formatarMoeda = (valor: number) => valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+async function notificarAdminPedidoPago(supabase: SupabaseClient, orderId: string) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const destinatario = process.env.CONTACT_EMAIL;
+  if (!apiKey || !destinatario) return;
+
+  const { data: pedido } = await supabase
+    .from("orders")
+    .select("*, profiles(nome, email), order_items(*, products(nome))")
+    .eq("id", orderId)
+    .maybeSingle();
+
+  if (!pedido) return;
+
+  const endereco = pedido.endereco_json ?? {};
+  const linhas = [
+    `Pedido: #${pedido.id.slice(0, 8)}`,
+    `Status do pagamento: Pago`,
+    "",
+    `Cliente: ${pedido.profiles?.nome ?? "Não informado"}`,
+    `E-mail: ${pedido.profiles?.email ?? "Não informado"}`,
+    `Telefone: ${pedido.telefone ?? "Não informado"}`,
+    "",
+    "Produtos:",
+    ...pedido.order_items.map(
+      (item: { quantidade: number; preco_unitario: number; products?: { nome: string } | null; nome_produto?: string | null }) =>
+        `  ${item.quantidade}x ${item.products?.nome ?? item.nome_produto ?? "Produto"} — ${formatarMoeda(item.preco_unitario * item.quantidade)}`
+    ),
+    "",
+    `Subtotal: ${formatarMoeda(pedido.subtotal)}`,
+    `Frete: ${formatarMoeda(pedido.frete_valor)}`,
+    `Total: ${formatarMoeda(pedido.total)}`,
+    "",
+    "Endereço de entrega:",
+    `  ${endereco.logradouro ?? ""}, ${endereco.numero ?? ""}${endereco.complemento ? ` — ${endereco.complemento}` : ""}`,
+    `  ${endereco.bairro ?? ""} — ${endereco.cidade ?? ""}/${endereco.estado ?? ""}`,
+    `  CEP ${pedido.cep_destino}`,
+  ];
+
+  try {
+    const resend = new Resend(apiKey);
+    await resend.emails.send({
+      from: "Sonho e Arte em Dimensões <pedidos@sonhoearte3d.com.br>",
+      to: destinatario,
+      subject: `Novo pedido pago — #${pedido.id.slice(0, 8)}`,
+      text: linhas.join("\n"),
+    });
+  } catch (err) {
+    console.error("Erro ao enviar e-mail de notificação de pedido pago:", err);
+  }
+}
 
 function validarAssinatura(req: VercelRequest, secret: string, dataId: string): boolean {
   const signatureHeader = req.headers["x-signature"];
@@ -80,11 +134,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (payment.status === "approved" && orderId) {
       const supabase = createClient(supabaseUrl, supabaseKey);
+
+      // Evita notificar de novo se a sincronização automática do client já confirmou este pedido.
+      const { data: pedidoAtual } = await supabase.from("orders").select("status").eq("id", orderId).maybeSingle();
+      const jaEstavaPago = pedidoAtual?.status === "paid";
+
       const { error } = await supabase.rpc("confirmar_pagamento_pedido", {
         p_order_id: orderId,
         p_payment_id: String(dataId),
       });
       if (error) throw error;
+
+      if (!jaEstavaPago) {
+        await notificarAdminPedidoPago(supabase, orderId);
+      }
     }
 
     res.status(200).json({ ok: true });
