@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/AuthProvider";
 
 const navLinks = [
   { to: "/", label: "Início" },
@@ -16,6 +17,14 @@ const navLinks = [
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    setOpen(false);
+    await signOut();
+    navigate("/", { replace: true });
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -63,7 +72,24 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="hidden lg:block">
+        <div className="hidden lg:flex items-center gap-6">
+          {user ? (
+            <div className="flex items-center gap-4">
+              <Link to="/conta" className="label-caps text-navy/70 hover:text-navy transition-colors">
+                Minha conta
+              </Link>
+              <button
+                onClick={handleSignOut}
+                className="label-caps text-navy/70 hover:text-magenta transition-colors"
+              >
+                Sair
+              </button>
+            </div>
+          ) : (
+            <Link to="/login" className="label-caps text-navy/70 hover:text-navy transition-colors">
+              Entrar
+            </Link>
+          )}
           <Link
             to="/orcamento"
             className="label-caps inline-flex items-center rounded-full bg-navy text-cream-light px-6 py-3 hover:bg-magenta transition-colors"
@@ -100,6 +126,26 @@ export function Header() {
                 {link.label}
               </NavLink>
             ))}
+            {user ? (
+              <div className="flex items-center justify-between py-3 border-b border-neutral-light/60">
+                <Link to="/conta" onClick={() => setOpen(false)} className="label-caps text-navy">
+                  Minha conta
+                </Link>
+                <button onClick={handleSignOut} className="label-caps text-navy/70">
+                  Sair
+                </button>
+              </div>
+            ) : (
+              <NavLink
+                to="/login"
+                onClick={() => setOpen(false)}
+                className={({ isActive }) =>
+                  cn("py-3 border-b border-neutral-light/60 label-caps", isActive ? "text-magenta" : "text-navy")
+                }
+              >
+                Entrar
+              </NavLink>
+            )}
             <Link
               to="/orcamento"
               onClick={() => setOpen(false)}

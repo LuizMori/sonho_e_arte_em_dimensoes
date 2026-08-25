@@ -66,3 +66,12 @@ export interface ContatoInfo {
   whatsapp: string;
   redesSociais: { nome: string; url: string }[];
 }
+
+export type UserRole = "customer" | "admin";
+
+export interface Profile {
+  id: string;
+  nome: string | null;
+  role: UserRole;
+  created_at: string;
+}

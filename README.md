@@ -39,12 +39,23 @@ Os e-mails são enviados a partir de `orcamento@sonhoearte3d.com.br`. Para isso 
 DNS de SPF/DKIM que o Resend fornece no painel de domínio do registrador). Sem essa verificação, o envio
 falha. Veja [`.env.example`](.env.example) para mais detalhes.
 
+O projeto está migrando de site institucional para loja. A camada de dados (auth, produtos, pedidos) usa
+[Supabase](https://supabase.com) (Auth + Postgres + Storage). Para isso funcionar, configure em
+Vercel > Settings > Environment Variables (e em `.env.local` para rodar localmente):
+
+- `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`: em Project Settings > API do seu projeto Supabase.
+- `SUPABASE_SERVICE_ROLE_KEY`: mesma tela, usada só em funções serverless que precisem ignorar RLS.
+
+O schema do banco (tabelas, triggers, RLS) fica versionado em [`supabase/migrations`](supabase/migrations),
+com instruções de como aplicar em [`supabase/README.md`](supabase/README.md).
+
 ## Stack
 
 - React + Vite + TypeScript
 - Tailwind CSS
 - React Router
 - react-hook-form + zod (validação de formulários)
+- Supabase (Auth + Postgres + Storage)
 
 ## Estrutura de pastas
 
@@ -100,6 +111,22 @@ Ambos os formulários usam `react-hook-form` com validação `zod`.
 - **Contato** (`/contato`): também envia um e-mail real para `CONTACT_EMAIL`, sem anexo. A lógica de envio
   fica em [`src/pages/Contato.tsx`](src/pages/Contato.tsx) e na função serverless
   [`api/contato.ts`](api/contato.ts).
+
+## Autenticação e papéis
+
+Cadastro/login usam e-mail e senha via Supabase Auth (`src/lib/AuthProvider.tsx`, montado em
+`src/App.tsx`), com confirmação de e-mail obrigatória e fluxo de recuperação de senha
+(`/esqueci-senha` e `/redefinir-senha`). Cada usuário tem uma linha em `profiles` (criada automaticamente
+por trigger no cadastro) com um `role`: `customer` (padrão) ou `admin`. Não existe um usuário admin
+genérico — o dono da loja se cadastra pelo fluxo normal e depois é promovido a admin via SQL, conforme
+descrito em [`supabase/README.md`](supabase/README.md).
+
+Todas as tabelas relacionadas a usuário/pedido têm Row Level Security habilitado: cliente só acessa seus
+próprios dados, admin tem acesso ampliado via a função `public.is_admin()` (ver
+[`supabase/migrations/0001_profiles.sql`](supabase/migrations/0001_profiles.sql)).
+
+Páginas protegidas usam o componente `src/components/RequireAuth.tsx`, que redireciona para `/login`
+quando não há sessão.
 
 ## Testando o envio de orçamento localmente
 
