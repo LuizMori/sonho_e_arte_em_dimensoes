@@ -28,6 +28,7 @@ export function Carrinho() {
       const { data } = await supabase
         .from("products")
         .select("*, product_images(*)")
+        .order("ordem", { referencedTable: "product_images" })
         .in(
           "id",
           items.map((item) => item.productId)

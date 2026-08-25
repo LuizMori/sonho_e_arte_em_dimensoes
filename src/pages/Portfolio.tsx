@@ -25,7 +25,8 @@ export function Portfolio() {
         .from("products")
         .select("*, product_images(*)")
         .eq("ativo", true)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .order("ordem", { referencedTable: "product_images" });
       setProdutos((data as ProdutoComImagens[]) ?? []);
       setCarregando(false);
     })();

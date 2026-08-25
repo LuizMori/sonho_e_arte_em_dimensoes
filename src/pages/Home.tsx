@@ -69,7 +69,8 @@ export function Home() {
         .select("*, product_images(*)")
         .eq("ativo", true)
         .eq("destaque", true)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .order("ordem", { referencedTable: "product_images" });
       setProdutosDestaque((data as ProdutoComImagens[]) ?? []);
     })();
   }, []);

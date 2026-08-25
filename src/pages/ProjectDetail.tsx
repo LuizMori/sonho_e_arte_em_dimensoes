@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { Reveal } from "@/components/Reveal";
-import { Gallery } from "@/components/Gallery";
+import { ProductCarousel } from "@/components/ProductCarousel";
 import { Button } from "@/components/ui/Button";
 import { Label } from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
@@ -27,6 +27,7 @@ export function ProjectDetail() {
         .select("*, product_images(*)")
         .eq("slug", slug)
         .eq("ativo", true)
+        .order("ordem", { referencedTable: "product_images" })
         .maybeSingle();
       setProduto((data as ProdutoComImagens) ?? null);
     })();
@@ -69,7 +70,6 @@ export function ProjectDetail() {
   }
 
   const categoria = categorias.find((c) => c.slug === produto.categoria);
-  const [capa, ...galeria] = produto.product_images;
 
   const metadados = [
     { label: "Categoria", valor: categoria?.nome ?? "" },
@@ -101,14 +101,11 @@ export function ProjectDetail() {
               {produto.nome}
             </h1>
           </Reveal>
-          {capa && (
-            <Reveal delay={100}>
-              <img
-                src={capa.url}
-                alt={capa.alt || produto.nome}
-                className="w-full h-auto max-h-[80vh] object-cover"
-              />
-            </Reveal>
+          {produto.product_images.length > 0 && (
+            <ProductCarousel
+              imagens={produto.product_images.map((imagem) => ({ url: imagem.url, alt: imagem.alt }))}
+              nomeProduto={produto.nome}
+            />
           )}
         </div>
       </section>
@@ -176,14 +173,6 @@ export function ProjectDetail() {
           </div>
         </div>
       </section>
-
-      {galeria.length > 0 && (
-        <section className="pb-24 md:pb-32">
-          <div className="container">
-            <Gallery imagens={galeria.map((imagem) => ({ url: imagem.url, alt: imagem.alt || produto.nome }))} />
-          </div>
-        </section>
-      )}
 
       <section className="py-24 md:py-32 bg-navy text-cream-light text-center">
         <Reveal className="container max-w-xl mx-auto">
