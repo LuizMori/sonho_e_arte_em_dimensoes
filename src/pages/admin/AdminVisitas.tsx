@@ -16,7 +16,14 @@ interface ProdutoResumo {
 const DIAS_JANELA = 30;
 const DIAS_EXIBIDOS = 14;
 
-const formatarDataChave = (data: Date) => data.toISOString().slice(0, 10);
+// Todo o agrupamento por dia usa o horário de Brasília, não UTC — sem isso, visitas
+// feitas à noite (depois de 21h em Brasília) já contavam como "amanhã".
+const FUSO_HORARIO = "America/Sao_Paulo";
+
+const formatarDataChave = (data: Date) =>
+  new Intl.DateTimeFormat("en-CA", { timeZone: FUSO_HORARIO, year: "numeric", month: "2-digit", day: "2-digit" }).format(
+    data
+  );
 
 const formatarDataLabel = (chave: string) =>
   new Date(`${chave}T12:00:00`).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
@@ -65,10 +72,13 @@ export function AdminVisitas() {
       mapa.set(chave, entrada);
     }
 
+    const hojeChave = formatarDataChave(new Date());
+    const ancora = new Date(`${hojeChave}T12:00:00Z`);
+
     const dias: DiaAgregado[] = [];
     for (let i = DIAS_EXIBIDOS - 1; i >= 0; i--) {
-      const data = new Date();
-      data.setDate(data.getDate() - i);
+      const data = new Date(ancora);
+      data.setUTCDate(data.getUTCDate() - i);
       const chave = formatarDataChave(data);
       const entrada = mapa.get(chave);
       dias.push({
