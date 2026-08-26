@@ -60,6 +60,25 @@ export interface ProdutoImagemDb {
   ordem: number;
 }
 
+export interface Color {
+  id: string;
+  nome: string;
+  created_at: string;
+}
+
+export interface ProdutoCorDb {
+  id: string;
+  color_id: string;
+  colors: Color;
+}
+
+export interface ProdutoVariacaoDb {
+  id: string;
+  product_id: string;
+  nome: string;
+  ordem: number;
+}
+
 export interface Produto {
   id: string;
   nome: string;
@@ -81,6 +100,8 @@ export interface Produto {
 
 export interface ProdutoComImagens extends Produto {
   product_images: ProdutoImagemDb[];
+  product_colors?: ProdutoCorDb[];
+  product_variations?: ProdutoVariacaoDb[];
 }
 
 export type OrderStatus = "pending_payment" | "paid" | "shipped" | "cancelled" | "expired";
@@ -118,6 +139,8 @@ export interface OrderItemDb {
   quantidade: number;
   preco_unitario: number;
   nome_produto: string | null;
+  cor: string | null;
+  variacao: string | null;
   created_at: string;
 }
 

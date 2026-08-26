@@ -11,7 +11,7 @@ import { uploadProductImage } from "@/lib/storage";
 import { slugify } from "@/lib/utils";
 import { parseCsv, linhasParaObjetos, paraLinhaCsv } from "@/lib/csv";
 import { categoriasProduto } from "@/data/categorias";
-import type { CategoriaSlug } from "@/types";
+import type { CategoriaSlug, Color } from "@/types";
 
 const COLUNAS = [
   "nome",
@@ -28,6 +28,8 @@ const COLUNAS = [
   "fotos",
   "slug",
   "tamanho_exibicao",
+  "cores",
+  "variacoes",
 ] as const;
 
 interface LinhaImportacao {
@@ -49,6 +51,8 @@ interface LinhaImportacao {
     fotos: string[];
     slug: string;
     tamanho_exibicao: string | null;
+    cores: string[];
+    variacoes: string[];
   };
 }
 
@@ -109,6 +113,16 @@ function validarLinha(bruto: Record<string, string>, numero: number): LinhaImpor
     .map((url) => url.trim())
     .filter((url) => url.length > 0);
 
+  const cores = (bruto.cores ?? "")
+    .split(";")
+    .map((nome) => nome.trim())
+    .filter((nome) => nome.length > 0);
+
+  const variacoes = (bruto.variacoes ?? "")
+    .split(";")
+    .map((nome) => nome.trim())
+    .filter((nome) => nome.length > 0);
+
   if (erros.length > 0) {
     return { numero, bruto, erros };
   }
@@ -135,6 +149,8 @@ function validarLinha(bruto: Record<string, string>, numero: number): LinhaImpor
       fotos,
       slug,
       tamanho_exibicao: bruto.tamanho_exibicao?.trim() || null,
+      cores,
+      variacoes,
     },
   };
 }
@@ -193,6 +209,8 @@ export function AdminProdutoImportar() {
       "https://exemplo.com/foto1.jpg;https://exemplo.com/foto2.jpg",
       "",
       "Tamanho único",
+      "Preto;Branco",
+      "",
     ];
     const conteudo = [paraLinhaCsv([...COLUNAS]), paraLinhaCsv(exemplo)].join("\n");
     const blob = new Blob([conteudo], { type: "text/csv;charset=utf-8" });
@@ -224,6 +242,9 @@ export function AdminProdutoImportar() {
     const {
       data: { session },
     } = await supabase.auth.getSession();
+
+    const { data: paleta } = await supabase.from("colors").select("*");
+    const paletaCores = (paleta as Color[]) ?? [];
 
     let criados = 0;
     let atualizados = 0;
@@ -282,7 +303,38 @@ export function AdminProdutoImportar() {
         criados++;
       }
 
-      if (!produtoId || dados.fotos.length === 0) continue;
+      if (!produtoId) continue;
+
+      if (dados.cores.length > 0) {
+        const idsEncontrados: string[] = [];
+        for (const nomeCor of dados.cores) {
+          const cor = paletaCores.find((c) => c.nome.toLowerCase() === nomeCor.toLowerCase());
+          if (cor) {
+            idsEncontrados.push(cor.id);
+          } else {
+            fotosComFalha.push(`${dados.nome}: cor "${nomeCor}" não existe na paleta, ignorada`);
+          }
+        }
+        await supabase.from("product_colors").delete().eq("product_id", produtoId);
+        if (idsEncontrados.length > 0) {
+          await supabase
+            .from("product_colors")
+            .insert(idsEncontrados.map((colorId) => ({ product_id: produtoId, color_id: colorId })));
+        }
+      }
+
+      if (dados.variacoes.length > 0) {
+        await supabase.from("product_variations").delete().eq("product_id", produtoId);
+        await supabase.from("product_variations").insert(
+          dados.variacoes.map((nomeVariacao, ordem) => ({
+            product_id: produtoId,
+            nome: nomeVariacao,
+            ordem,
+          }))
+        );
+      }
+
+      if (dados.fotos.length === 0) continue;
 
       const { data: imagensExistentes } = await supabase
         .from("product_images")
@@ -346,7 +398,13 @@ export function AdminProdutoImportar() {
             mais URLs de imagem separadas por <code className="text-navy">;</code> — cada uma é baixada e
             enviada automaticamente para o catálogo. A coluna{" "}
             <code className="text-navy">tamanho_exibicao</code> é opcional e substitui a dimensão em cm na
-            página do produto (ex: "Tamanho único").
+            página do produto (ex: "Tamanho único"). A coluna <code className="text-navy">cores</code> é
+            opcional e aceita nomes de cores já cadastrados em <code className="text-navy">/admin/cores</code>,
+            separados por <code className="text-navy">;</code> (ex: "Preto;Branco") — nomes que não existem
+            na paleta são ignorados. A coluna <code className="text-navy">variacoes</code> é opcional e
+            aceita qualquer texto separado por <code className="text-navy">;</code> (ex:
+            "Branca de Neve;Cinderela;Elsa") — use quando o produto tem opções que não são cor, como
+            personagens ou estampas.
           </p>
 
           <div className="flex flex-wrap gap-4 mt-8">

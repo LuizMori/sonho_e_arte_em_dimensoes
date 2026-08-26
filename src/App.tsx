@@ -27,6 +27,7 @@ import { Pedido } from "@/pages/Pedido";
 import { AdminProdutos } from "@/pages/admin/AdminProdutos";
 import { AdminProdutoForm } from "@/pages/admin/AdminProdutoForm";
 import { AdminProdutoImportar } from "@/pages/admin/AdminProdutoImportar";
+import { AdminCores } from "@/pages/admin/AdminCores";
 import { AdminPedidos } from "@/pages/admin/AdminPedidos";
 import { AdminBalanco } from "@/pages/admin/AdminBalanco";
 import { AdminDepoimentos } from "@/pages/admin/AdminDepoimentos";
@@ -104,6 +105,14 @@ function App() {
               element={
                 <RequireAdmin>
                   <AdminProdutoForm />
+                </RequireAdmin>
+              }
+            />
+            <Route
+              path="/admin/cores"
+              element={
+                <RequireAdmin>
+                  <AdminCores />
                 </RequireAdmin>
               }
             />

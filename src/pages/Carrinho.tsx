@@ -71,7 +71,10 @@ export function Carrinho() {
               {linhas.map(({ item, produto }) => {
                 const capa = produto.product_images[0];
                 return (
-                  <Reveal key={produto.id} className="flex gap-6 items-center border-b border-neutral-light pb-8">
+                  <Reveal
+                    key={`${produto.id}-${item.cor ?? ""}-${item.variacao ?? ""}`}
+                    className="flex gap-6 items-center border-b border-neutral-light pb-8"
+                  >
                     <Link to={`/portfolio/${produto.slug}`} className="shrink-0 w-24 h-24 bg-neutral-light/40 overflow-hidden">
                       {capa && <img src={capa.url} alt={capa.alt || produto.nome} className="w-full h-full object-cover" />}
                     </Link>
@@ -79,6 +82,13 @@ export function Carrinho() {
                       <Link to={`/portfolio/${produto.slug}`} className="font-display text-xl text-navy hover:text-magenta transition-colors">
                         {produto.nome}
                       </Link>
+                      {(item.cor || item.variacao) && (
+                        <p className="text-navy/50 text-sm mt-1">
+                          {[item.cor && `Cor: ${item.cor}`, item.variacao && `Variação: ${item.variacao}`]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+                      )}
                       <p className="text-navy/60 mt-1">{formatarMoeda(produto.preco)}</p>
                       <div className="flex items-center gap-3 mt-3">
                         <input
@@ -86,12 +96,19 @@ export function Carrinho() {
                           min={1}
                           max={produto.stock}
                           value={item.quantidade}
-                          onChange={(e) => updateQuantidade(produto.id, Math.min(Number(e.target.value), produto.stock))}
+                          onChange={(e) =>
+                            updateQuantidade(
+                              produto.id,
+                              Math.min(Number(e.target.value), produto.stock),
+                              item.cor,
+                              item.variacao
+                            )
+                          }
                           className="w-16 bg-transparent border-b border-neutral-light py-1 text-navy focus:outline-none focus:border-magenta"
                         />
                         <button
                           type="button"
-                          onClick={() => removeItem(produto.id)}
+                          onClick={() => removeItem(produto.id, item.cor, item.variacao)}
                           className="label-caps text-navy/50 hover:text-magenta transition-colors"
                         >
                           Remover

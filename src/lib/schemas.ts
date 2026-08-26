@@ -80,7 +80,7 @@ export const produtoSchema = z.object({
   pesoKg: z.coerce.number().positive("Informe o peso em kg"),
   alturaCm: z.coerce.number().positive("Informe a altura em cm"),
   larguraCm: z.coerce.number().positive("Informe a largura em cm"),
-  comprimentoCm: z.coerce.number().positive("Informe o comprimento em cm"),
+  comprimentoCm: z.coerce.number().positive("Informe a profundidade em cm"),
   stock: z.coerce.number().int().min(0, "Informe a quantidade em estoque"),
   ativo: z.boolean(),
   tamanhoExibicao: z.string().trim().optional(),

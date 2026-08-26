@@ -129,15 +129,19 @@ export function Pedido() {
         </Reveal>
 
         <Reveal className="space-y-4 mb-10">
-          {itens.map((item) => (
-            <div key={item.id} className="flex items-center justify-between border-b border-neutral-light pb-4">
-              <p className="text-navy">
-                {item.products?.nome ?? item.nome_produto ?? "Produto"}{" "}
-                <span className="text-navy/50">× {item.quantidade}</span>
-              </p>
-              <p className="text-navy">{formatarMoeda(item.preco_unitario * item.quantidade)}</p>
-            </div>
-          ))}
+          {itens.map((item) => {
+            const detalhe = [item.cor, item.variacao].filter(Boolean).join(" · ");
+            return (
+              <div key={item.id} className="flex items-center justify-between border-b border-neutral-light pb-4">
+                <p className="text-navy">
+                  {item.products?.nome ?? item.nome_produto ?? "Produto"}
+                  {detalhe && <span className="text-navy/50"> ({detalhe})</span>}{" "}
+                  <span className="text-navy/50">× {item.quantidade}</span>
+                </p>
+                <p className="text-navy">{formatarMoeda(item.preco_unitario * item.quantidade)}</p>
+              </div>
+            );
+          })}
           <div className="flex items-center justify-between pt-2">
             <span className="label-caps text-navy/70">Subtotal</span>
             <span className="text-navy">{formatarMoeda(order.subtotal)}</span>

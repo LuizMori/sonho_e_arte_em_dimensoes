@@ -6,7 +6,7 @@ import { usePageMeta } from "@/lib/usePageMeta";
 import { Reveal } from "@/components/Reveal";
 import { ProductCarousel } from "@/components/ProductCarousel";
 import { Button } from "@/components/ui/Button";
-import { Input, Label, FieldError } from "@/components/ui/Input";
+import { Input, Label, FieldError, Select } from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
 import { supabase } from "@/lib/supabaseClient";
 import { useCart } from "@/lib/CartProvider";
@@ -75,6 +75,8 @@ export function ProjectDetail() {
   const [produto, setProduto] = useState<ProdutoComImagens | null | undefined>(undefined);
   const [proximo, setProximo] = useState<{ slug: string; nome: string } | null>(null);
   const [quantidade, setQuantidade] = useState(1);
+  const [corSelecionada, setCorSelecionada] = useState("");
+  const [variacaoSelecionada, setVariacaoSelecionada] = useState("");
   const { items, addItem } = useCart();
   const { showToast } = useToast();
 
@@ -83,12 +85,24 @@ export function ProjectDetail() {
     (async () => {
       const { data } = await supabase
         .from("products")
-        .select("*, product_images(*)")
+        .select(
+          "*, product_images(*), product_colors(color_id, colors(id, nome)), product_variations(id, nome, ordem)"
+        )
         .eq("slug", slug)
         .eq("ativo", true)
         .order("ordem", { referencedTable: "product_images" })
+        .order("ordem", { referencedTable: "product_variations" })
         .maybeSingle();
-      setProduto((data as ProdutoComImagens) ?? null);
+      const produtoCarregado = (data as ProdutoComImagens) ?? null;
+      setProduto(produtoCarregado);
+
+      const cores = (produtoCarregado?.product_colors ?? [])
+        .map((pc) => pc.colors.nome)
+        .sort((a, b) => a.localeCompare(b, "pt-BR"));
+      setCorSelecionada(cores[0] ?? "");
+
+      const variacoes = produtoCarregado?.product_variations ?? [];
+      setVariacaoSelecionada(variacoes[0]?.nome ?? "");
     })();
   }, [slug]);
 
@@ -129,6 +143,10 @@ export function ProjectDetail() {
   }
 
   const categoria = categorias.find((c) => c.slug === produto.categoria);
+  const coresDisponiveis = (produto.product_colors ?? [])
+    .map((pc) => pc.colors.nome)
+    .sort((a, b) => a.localeCompare(b, "pt-BR"));
+  const variacoesDisponiveis = (produto.product_variations ?? []).map((v) => v.nome);
 
   const metadados = [
     { label: "Categoria", valor: categoria?.nome ?? "" },
@@ -197,7 +215,9 @@ export function ProjectDetail() {
 
           <Reveal className="max-w-xs mt-10">
             {(() => {
-              const jaNoCarrinho = items.find((item) => item.productId === produto.id)?.quantidade ?? 0;
+              const jaNoCarrinho = items
+                .filter((item) => item.productId === produto.id)
+                .reduce((total, item) => total + item.quantidade, 0);
               const restante = Math.max(0, produto.stock - jaNoCarrinho);
 
               if (produto.stock === 0) {
@@ -210,6 +230,34 @@ export function ProjectDetail() {
 
               return (
                 <div>
+                  {coresDisponiveis.length > 0 && (
+                    <div className="mb-4">
+                      <Label htmlFor="cor">Cor</Label>
+                      <Select id="cor" value={corSelecionada} onChange={(e) => setCorSelecionada(e.target.value)}>
+                        {coresDisponiveis.map((cor) => (
+                          <option key={cor} value={cor}>
+                            {cor}
+                          </option>
+                        ))}
+                      </Select>
+                    </div>
+                  )}
+                  {variacoesDisponiveis.length > 0 && (
+                    <div className="mb-4">
+                      <Label htmlFor="variacao">Variação</Label>
+                      <Select
+                        id="variacao"
+                        value={variacaoSelecionada}
+                        onChange={(e) => setVariacaoSelecionada(e.target.value)}
+                      >
+                        {variacoesDisponiveis.map((variacao) => (
+                          <option key={variacao} value={variacao}>
+                            {variacao}
+                          </option>
+                        ))}
+                      </Select>
+                    </div>
+                  )}
                   <div className="flex items-center gap-4 mb-4">
                     <Label htmlFor="quantidade">Quantidade</Label>
                     <input
@@ -226,7 +274,12 @@ export function ProjectDetail() {
                     className="w-full"
                     onClick={() => {
                       const quantidadeValida = Math.max(1, Math.min(quantidade, restante));
-                      addItem(produto.id, quantidadeValida);
+                      addItem(
+                        produto.id,
+                        quantidadeValida,
+                        coresDisponiveis.length > 0 ? corSelecionada : null,
+                        variacoesDisponiveis.length > 0 ? variacaoSelecionada : null
+                      );
                       showToast({ title: "Adicionado ao carrinho", description: produto.nome, variant: "success" });
                       setQuantidade(1);
                     }}

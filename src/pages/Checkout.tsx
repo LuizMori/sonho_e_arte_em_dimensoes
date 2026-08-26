@@ -159,7 +159,12 @@ export function Checkout() {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
         body: JSON.stringify({
-          itens: items.map((item) => ({ productId: item.productId, quantidade: item.quantidade })),
+          itens: items.map((item) => ({
+            productId: item.productId,
+            quantidade: item.quantidade,
+            cor: item.cor,
+            variacao: item.variacao,
+          })),
           cepDestino: cep.replace(/\D/g, ""),
           freteValor: frete.valor,
           freteNome: `${frete.transportadora} - ${frete.nome}`,
@@ -208,14 +213,22 @@ export function Checkout() {
         ) : (
           <form onSubmit={handleSubmit(finalizarPedido)} noValidate>
             <Reveal className="space-y-4 mb-14">
-              {linhas.map(({ item, produto }) => (
-                <div key={produto.id} className="flex items-center justify-between border-b border-neutral-light pb-4">
-                  <p className="text-navy">
-                    {produto.nome} <span className="text-navy/50">× {item.quantidade}</span>
-                  </p>
-                  <p className="text-navy">{formatarMoeda(produto.preco * item.quantidade)}</p>
-                </div>
-              ))}
+              {linhas.map(({ item, produto }) => {
+                const detalhe = [item.cor, item.variacao].filter(Boolean).join(" · ");
+                return (
+                  <div
+                    key={`${produto.id}-${item.cor ?? ""}-${item.variacao ?? ""}`}
+                    className="flex items-center justify-between border-b border-neutral-light pb-4"
+                  >
+                    <p className="text-navy">
+                      {produto.nome}
+                      {detalhe && <span className="text-navy/50"> ({detalhe})</span>}{" "}
+                      <span className="text-navy/50">× {item.quantidade}</span>
+                    </p>
+                    <p className="text-navy">{formatarMoeda(produto.preco * item.quantidade)}</p>
+                  </div>
+                );
+              })}
               <div className="flex items-center justify-between pt-2">
                 <span className="label-caps text-navy/70">Subtotal</span>
                 <span className="text-navy">{formatarMoeda(subtotal)}</span>

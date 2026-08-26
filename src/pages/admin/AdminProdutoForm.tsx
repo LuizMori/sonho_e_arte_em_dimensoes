@@ -13,7 +13,7 @@ import { uploadProductImage } from "@/lib/storage";
 import { slugify } from "@/lib/utils";
 import { produtoSchema, type ProdutoFormData } from "@/lib/schemas";
 import { categoriasProduto } from "@/data/categorias";
-import type { ProdutoImagemDb } from "@/types";
+import type { Color, ProdutoImagemDb } from "@/types";
 
 const EMBALAGENS_PADRAO = [
   { label: "Pequena", pesoKg: 0.2, alturaCm: 10, larguraCm: 10, comprimentoCm: 10 },
@@ -38,6 +38,9 @@ export function AdminProdutoForm() {
   const [enviandoImagem, setEnviandoImagem] = useState(false);
   const [estoqueOriginal, setEstoqueOriginal] = useState<number | null>(null);
   const [avisosPendentes, setAvisosPendentes] = useState<number | null>(null);
+  const [paletaCores, setPaletaCores] = useState<Color[]>([]);
+  const [coresSelecionadas, setCoresSelecionadas] = useState<string[]>([]);
+  const [variacoesTexto, setVariacoesTexto] = useState("");
 
   const {
     register,
@@ -51,18 +54,28 @@ export function AdminProdutoForm() {
   });
 
   useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("colors").select("*").order("nome", { ascending: true });
+      setPaletaCores((data as Color[]) ?? []);
+    })();
+  }, []);
+
+  useEffect(() => {
     if (!id) return;
 
     (async () => {
-      const [{ data: produto }, { data: imgs }, { count: pendentes }] = await Promise.all([
-        supabase.from("products").select("*").eq("id", id).single(),
-        supabase.from("product_images").select("*").eq("product_id", id).order("ordem"),
-        supabase
-          .from("stock_notifications")
-          .select("id", { count: "exact", head: true })
-          .eq("product_id", id)
-          .eq("notificado", false),
-      ]);
+      const [{ data: produto }, { data: imgs }, { count: pendentes }, { data: cores }, { data: variacoes }] =
+        await Promise.all([
+          supabase.from("products").select("*").eq("id", id).single(),
+          supabase.from("product_images").select("*").eq("product_id", id).order("ordem"),
+          supabase
+            .from("stock_notifications")
+            .select("id", { count: "exact", head: true })
+            .eq("product_id", id)
+            .eq("notificado", false),
+          supabase.from("product_colors").select("color_id").eq("product_id", id),
+          supabase.from("product_variations").select("nome").eq("product_id", id).order("ordem"),
+        ]);
 
       if (produto) {
         reset({
@@ -83,9 +96,17 @@ export function AdminProdutoForm() {
       }
       setImagens(imgs ?? []);
       setAvisosPendentes(pendentes ?? 0);
+      setCoresSelecionadas((cores ?? []).map((c) => c.color_id));
+      setVariacoesTexto((variacoes ?? []).map((v) => v.nome).join("; "));
       setCarregando(false);
     })();
   }, [id, reset]);
+
+  const alternarCor = (colorId: string) => {
+    setCoresSelecionadas((prev) =>
+      prev.includes(colorId) ? prev.filter((c) => c !== colorId) : [...prev, colorId]
+    );
+  };
 
   const notificarReposicao = async () => {
     const {
@@ -101,6 +122,27 @@ export function AdminProdutoForm() {
     } catch {
       // silencioso: falha no aviso não deve travar o fluxo de salvar o produto
     }
+  };
+
+  const salvarCores = async (produtoId: string) => {
+    await supabase.from("product_colors").delete().eq("product_id", produtoId);
+    if (coresSelecionadas.length === 0) return;
+    await supabase
+      .from("product_colors")
+      .insert(coresSelecionadas.map((colorId) => ({ product_id: produtoId, color_id: colorId })));
+  };
+
+  const salvarVariacoes = async (produtoId: string) => {
+    const nomes = variacoesTexto
+      .split(";")
+      .map((nome) => nome.trim())
+      .filter((nome) => nome.length > 0);
+
+    await supabase.from("product_variations").delete().eq("product_id", produtoId);
+    if (nomes.length === 0) return;
+    await supabase
+      .from("product_variations")
+      .insert(nomes.map((nome, ordem) => ({ product_id: produtoId, nome, ordem })));
   };
 
   const onSubmit = async (data: ProdutoFormData) => {
@@ -134,6 +176,9 @@ export function AdminProdutoForm() {
         notificarReposicao();
       }
 
+      await salvarCores(id);
+      await salvarVariacoes(id);
+
       showToast({ title: "Produto atualizado", variant: "success" });
       return;
     }
@@ -155,6 +200,9 @@ export function AdminProdutoForm() {
       });
       return;
     }
+
+    await salvarCores(novo.id);
+    await salvarVariacoes(novo.id);
 
     showToast({ title: "Produto criado", description: "Agora adicione as fotos.", variant: "success" });
     navigate(`/admin/produtos/${novo.id}`, { replace: true });
@@ -249,6 +297,54 @@ export function AdminProdutoForm() {
             </div>
 
             <div>
+              <p className="label-caps text-navy/70 mb-2">Cores disponíveis (opcional)</p>
+              {paletaCores.length === 0 ? (
+                <p className="text-sm text-navy/50 mt-2">
+                  Nenhuma cor cadastrada ainda. Gerencie a paleta em{" "}
+                  <a href="/admin/cores" className="text-navy hover:text-magenta transition-colors">
+                    Cores
+                  </a>
+                  .
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-3 mt-2">
+                  {paletaCores.map((cor) => {
+                    const selecionada = coresSelecionadas.includes(cor.id);
+                    return (
+                      <button
+                        key={cor.id}
+                        type="button"
+                        onClick={() => alternarCor(cor.id)}
+                        className={`label-caps rounded-full border px-4 py-2 transition-colors ${
+                          selecionada
+                            ? "border-magenta text-magenta"
+                            : "border-neutral-light text-navy/70 hover:border-magenta hover:text-magenta"
+                        }`}
+                      >
+                        {cor.nome}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="variacoes">Variações (opcional)</Label>
+              <Input
+                id="variacoes"
+                value={variacoesTexto}
+                onChange={(e) => setVariacoesTexto(e.target.value)}
+                placeholder="Ex: Branca de Neve;Cinderela;Elsa;Aurora"
+              />
+              <p className="text-xs text-navy/50 mt-2">
+                Use quando o mesmo produto tem várias opções que o cliente escolhe na compra (ex:
+                personagens, estampas). Separe os nomes com ; — o estoque continua sendo um só,
+                compartilhado entre todas as opções.
+              </p>
+            </div>
+
+            <div>
               <Label htmlFor="categoria">Categoria</Label>
               <Select id="categoria" {...register("categoria")}>
                 {categoriasProduto.map((categoria) => (
@@ -299,7 +395,7 @@ export function AdminProdutoForm() {
                   <FieldError message={errors.larguraCm?.message} />
                 </div>
                 <div>
-                  <Label htmlFor="comprimentoCm">Comprimento (cm)</Label>
+                  <Label htmlFor="comprimentoCm">Profundidade (cm)</Label>
                   <Input id="comprimentoCm" type="number" step="0.1" min="0" {...register("comprimentoCm")} />
                   <FieldError message={errors.comprimentoCm?.message} />
                 </div>

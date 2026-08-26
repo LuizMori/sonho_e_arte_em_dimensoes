@@ -4,6 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 interface CreateOrderItemPayload {
   productId: string;
   quantidade: number;
+  cor?: string | null;
+  variacao?: string | null;
 }
 
 interface EnderecoPayload {
@@ -74,7 +76,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const { data: orderId, error } = await supabase.rpc("criar_pedido", {
       p_user_id: user.id,
-      p_itens: itens.map((item) => ({ product_id: item.productId, quantidade: item.quantidade })),
+      p_itens: itens.map((item) => ({
+        product_id: item.productId,
+        quantidade: item.quantidade,
+        cor: item.cor ?? null,
+        variacao: item.variacao ?? null,
+      })),
       p_cep_destino: cepDestino,
       p_frete_valor: freteValor,
       p_frete_nome: freteNome ?? "",

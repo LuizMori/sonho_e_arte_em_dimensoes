@@ -56,6 +56,14 @@ com a CLI é uma opção futura.
     `products.categoria`: essa aba do Portfólio passa a ser só informativa (sugestões + galeria),
     nenhum produto pode mais ser cadastrado nela. Produtos que ainda estivessem em `personalizados`
     viram `decoracao`. Sem pré-requisito manual.
+17. `0017_cores_produto.sql` — tabelas `colors` (paleta editável pelo admin, semeada com 16 cores) e
+    `product_colors` (cores atribuídas a cada produto); adiciona `cor` a `order_items` e reescreve
+    `criar_pedido` para gravar a cor escolhida pelo cliente como snapshot no pedido. Sem pré-requisito
+    manual.
+18. `0018_variacoes_produto.sql` — tabela `product_variations`: lista de opções livre por produto (ex:
+    personagens, estampas) — diferente de cor, não é uma paleta global, cada produto define a própria
+    lista. Adiciona `variacao` a `order_items` e reescreve `criar_pedido` de novo para gravar a variação
+    escolhida como snapshot no pedido. Sem pré-requisito manual.
 
 Depois de rodar a migração 1 e o dono da loja se cadastrar pelo fluxo normal (`/cadastro`), promova a
 conta a admin rodando no SQL Editor:
