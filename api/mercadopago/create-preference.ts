@@ -118,6 +118,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           pending: `${origin}/pedido/${order.id}`,
         },
         auto_return: "approved",
+        // "ticket" é a categoria do Mercado Pago para Boleto/pagamento em lotérica — excluída porque
+        // a loja não quer oferecer esse meio de pagamento no checkout.
+        payment_methods: {
+          excluded_payment_types: [{ id: "ticket" }],
+        },
       }),
     });
 
