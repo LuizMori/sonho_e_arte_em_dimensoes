@@ -30,6 +30,7 @@ import { AdminProdutoImportar } from "@/pages/admin/AdminProdutoImportar";
 import { AdminPedidos } from "@/pages/admin/AdminPedidos";
 import { AdminBalanco } from "@/pages/admin/AdminBalanco";
 import { AdminDepoimentos } from "@/pages/admin/AdminDepoimentos";
+import { AdminGaleriaPersonalizados } from "@/pages/admin/AdminGaleriaPersonalizados";
 import { AdminVisitas } from "@/pages/admin/AdminVisitas";
 import { AdminUsuarios } from "@/pages/admin/AdminUsuarios";
 import { NotFound } from "@/pages/NotFound";
@@ -127,6 +128,14 @@ function App() {
               element={
                 <RequireAdmin>
                   <AdminDepoimentos />
+                </RequireAdmin>
+              }
+            />
+            <Route
+              path="/admin/galeria-personalizados"
+              element={
+                <RequireAdmin>
+                  <AdminGaleriaPersonalizados />
                 </RequireAdmin>
               }
             />

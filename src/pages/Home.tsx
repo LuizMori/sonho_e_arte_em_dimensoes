@@ -39,8 +39,8 @@ const dreamSteps = [
 const personalizacaoImagens = [
   {
     url: imagemColecionaveis,
-    alt: "Colecionável personalizado impresso em 3D",
-    nome: "Colecionáveis",
+    alt: "Item de papelaria personalizado impresso em 3D",
+    nome: "Papelaria",
   },
   {
     url: imagemPresentes,
@@ -57,7 +57,7 @@ const personalizacaoImagens = [
 export function Home() {
   usePageMeta(
     "Sonho e Arte em Dimensões | Impressão 3D",
-    "Transformamos ideias em objetos reais através da impressão 3D. Peças personalizadas, decoração, miniaturas, protótipos e muito mais."
+    "Transformamos ideias em objetos reais através da impressão 3D. Peças personalizadas, decoração, presentes e muito mais."
   );
 
   const [produtosDestaque, setProdutosDestaque] = useState<ProdutoComImagens[]>([]);

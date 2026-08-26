@@ -1,9 +1,11 @@
 export type CategoriaSlug =
   | "decoracao"
-  | "personalizados"
-  | "miniaturas"
-  | "colecionaveis"
-  | "geek";
+  | "educativos"
+  | "papelaria"
+  | "religiosos"
+  | "geek"
+  | "presentes"
+  | "personalizados";
 
 export interface Categoria {
   slug: CategoriaSlug;
@@ -154,5 +156,13 @@ export interface Testimonial {
   nota: number | null;
   imagem_url: string | null;
   aprovado: boolean;
+  created_at: string;
+}
+
+export interface CustomGalleryItem {
+  id: string;
+  imagem_url: string;
+  descricao: string | null;
+  ordem: number;
   created_at: string;
 }

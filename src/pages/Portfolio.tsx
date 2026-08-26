@@ -1,21 +1,31 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { Reveal } from "@/components/Reveal";
 import { CategoryFilter } from "@/components/CategoryFilter";
 import { ProjectCard } from "@/components/ProjectCard";
+import { Button } from "@/components/ui/Button";
 import { supabase } from "@/lib/supabaseClient";
 import { categorias } from "@/data/categorias";
-import type { ProdutoComImagens } from "@/types";
+import type { CustomGalleryItem, ProdutoComImagens } from "@/types";
+
+const SUGESTOES_PERSONALIZADOS = [
+  "Brindes empresariais",
+  "Brindes comerciais",
+  "Placa PET",
+  "Logomarca",
+];
 
 export function Portfolio() {
   usePageMeta(
     "Portfólio | Sonho e Arte em Dimensões",
-    "Explore o portfólio de peças impressas em 3D da Sonho e Arte em Dimensões: decoração, personalizados, miniaturas e colecionáveis."
+    "Explore o portfólio de peças impressas em 3D da Sonho e Arte em Dimensões: decoração, papelaria, presentes, geek e muito mais."
   );
 
   const [categoriaAtiva, setCategoriaAtiva] = useState<string | null>(null);
   const [produtos, setProdutos] = useState<ProdutoComImagens[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const [galeriaPersonalizados, setGaleriaPersonalizados] = useState<CustomGalleryItem[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -27,6 +37,17 @@ export function Portfolio() {
         .order("ordem", { referencedTable: "product_images" });
       setProdutos((data as ProdutoComImagens[]) ?? []);
       setCarregando(false);
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("custom_gallery")
+        .select("*")
+        .order("ordem", { ascending: true })
+        .order("created_at", { ascending: false });
+      setGaleriaPersonalizados((data as CustomGalleryItem[]) ?? []);
     })();
   }, []);
 
@@ -48,6 +69,46 @@ export function Portfolio() {
         <Reveal delay={100} className="mb-16">
           <CategoryFilter categorias={categorias} ativa={categoriaAtiva} onChange={setCategoriaAtiva} />
         </Reveal>
+
+        {categoriaAtiva === "personalizados" && (
+          <Reveal className="mb-16 rounded-2xl border border-neutral-light bg-cream-light/60 p-8 md:p-10">
+            <p className="label-caps text-magenta mb-3">Sob encomenda</p>
+            <h2 className="font-display text-2xl md:text-3xl text-navy tracking-tightest mb-4 max-w-xl">
+              Não encontrou o que procura? Criamos peças personalizadas para você.
+            </h2>
+            <p className="text-navy/70 mb-6 max-w-2xl">
+              Conte sua ideia e a gente dá forma a ela. Alguns exemplos do que já produzimos sob medida:
+            </p>
+            <ul className="flex flex-wrap gap-x-8 gap-y-2 mb-8">
+              {SUGESTOES_PERSONALIZADOS.map((sugestao) => (
+                <li key={sugestao} className="label-caps text-navy/60">
+                  {sugestao}
+                </li>
+              ))}
+            </ul>
+            <Link to="/orcamento">
+              <Button>Solicitar orçamento</Button>
+            </Link>
+
+            {galeriaPersonalizados.length > 0 && (
+              <div className="mt-10 pt-8 border-t border-neutral-light/70">
+                <p className="label-caps text-navy/50 mb-4">Já produzimos</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {galeriaPersonalizados.map((item) => (
+                    <div key={item.id} className="aspect-square overflow-hidden rounded-lg">
+                      <img
+                        src={item.imagem_url}
+                        alt={item.descricao ?? "Peça personalizada já produzida"}
+                        loading="lazy"
+                        className="w-full h-full object-cover img-hover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Reveal>
+        )}
 
         {carregando ? (
           <p className="text-navy/60">Carregando...</p>
