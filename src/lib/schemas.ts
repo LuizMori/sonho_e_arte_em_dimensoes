@@ -83,6 +83,7 @@ export const produtoSchema = z.object({
   comprimentoCm: z.coerce.number().positive("Informe o comprimento em cm"),
   stock: z.coerce.number().int().min(0, "Informe a quantidade em estoque"),
   ativo: z.boolean(),
+  tamanhoExibicao: z.string().trim().optional(),
 });
 
 export type ProdutoFormData = z.infer<typeof produtoSchema>;

@@ -27,6 +27,7 @@ const COLUNAS = [
   "destaque",
   "fotos",
   "slug",
+  "tamanho_exibicao",
 ] as const;
 
 interface LinhaImportacao {
@@ -47,6 +48,7 @@ interface LinhaImportacao {
     destaque: boolean;
     fotos: string[];
     slug: string;
+    tamanho_exibicao: string | null;
   };
 }
 
@@ -132,6 +134,7 @@ function validarLinha(bruto: Record<string, string>, numero: number): LinhaImpor
       destaque: paraBooleano(bruto.destaque ?? "", false),
       fotos,
       slug,
+      tamanho_exibicao: bruto.tamanho_exibicao?.trim() || null,
     },
   };
 }
@@ -189,6 +192,7 @@ export function AdminProdutoImportar() {
       "nao",
       "https://exemplo.com/foto1.jpg;https://exemplo.com/foto2.jpg",
       "",
+      "Tamanho único",
     ];
     const conteudo = [paraLinhaCsv([...COLUNAS]), paraLinhaCsv(exemplo)].join("\n");
     const blob = new Blob([conteudo], { type: "text/csv;charset=utf-8" });
@@ -242,6 +246,7 @@ export function AdminProdutoImportar() {
         stock: dados.stock,
         ativo: dados.ativo,
         destaque: dados.destaque,
+        tamanho_exibicao: dados.tamanho_exibicao,
       };
 
       const { data: existente } = await supabase
@@ -339,7 +344,9 @@ export function AdminProdutoImportar() {
             a coluna <code className="text-navy">slug</code> preenchida e ela já existir, o produto é
             atualizado em vez de duplicado. A coluna <code className="text-navy">fotos</code> aceita uma ou
             mais URLs de imagem separadas por <code className="text-navy">;</code> — cada uma é baixada e
-            enviada automaticamente para o catálogo.
+            enviada automaticamente para o catálogo. A coluna{" "}
+            <code className="text-navy">tamanho_exibicao</code> é opcional e substitui a dimensão em cm na
+            página do produto (ex: "Tamanho único").
           </p>
 
           <div className="flex flex-wrap gap-4 mt-8">

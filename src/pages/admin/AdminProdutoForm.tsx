@@ -15,6 +15,12 @@ import { produtoSchema, type ProdutoFormData } from "@/lib/schemas";
 import { categorias } from "@/data/categorias";
 import type { ProdutoImagemDb } from "@/types";
 
+const EMBALAGENS_PADRAO = [
+  { label: "Pequena", pesoKg: 0.2, alturaCm: 10, larguraCm: 10, comprimentoCm: 10 },
+  { label: "Média", pesoKg: 0.6, alturaCm: 18, larguraCm: 15, comprimentoCm: 15 },
+  { label: "Grande", pesoKg: 1.5, alturaCm: 30, larguraCm: 25, comprimentoCm: 20 },
+] as const;
+
 export function AdminProdutoForm() {
   const { id } = useParams<{ id: string }>();
   const editando = Boolean(id);
@@ -37,6 +43,7 @@ export function AdminProdutoForm() {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<ProdutoFormData>({
     resolver: zodResolver(produtoSchema),
@@ -70,6 +77,7 @@ export function AdminProdutoForm() {
           comprimentoCm: produto.comprimento_cm,
           stock: produto.stock,
           ativo: produto.ativo,
+          tamanhoExibicao: produto.tamanho_exibicao ?? "",
         });
         setEstoqueOriginal(produto.stock);
       }
@@ -110,6 +118,7 @@ export function AdminProdutoForm() {
       comprimento_cm: data.comprimentoCm,
       stock: data.stock,
       ativo: data.ativo,
+      tamanho_exibicao: data.tamanhoExibicao || null,
     };
 
     if (editando && id) {
@@ -253,6 +262,26 @@ export function AdminProdutoForm() {
 
             <div>
               <p className="label-caps text-navy/70 mb-4">Peso e dimensões (obrigatórios)</p>
+              <p className="text-sm text-navy/50 mb-3">
+                Não sabe a medida exata? Preencha com uma embalagem padrão e ajuste depois se precisar.
+              </p>
+              <div className="flex flex-wrap gap-3 mb-4">
+                {EMBALAGENS_PADRAO.map((embalagem) => (
+                  <button
+                    key={embalagem.label}
+                    type="button"
+                    onClick={() => {
+                      setValue("pesoKg", embalagem.pesoKg, { shouldValidate: true });
+                      setValue("alturaCm", embalagem.alturaCm, { shouldValidate: true });
+                      setValue("larguraCm", embalagem.larguraCm, { shouldValidate: true });
+                      setValue("comprimentoCm", embalagem.comprimentoCm, { shouldValidate: true });
+                    }}
+                    className="label-caps rounded-full border border-neutral-light text-navy/70 px-4 py-2 hover:border-magenta hover:text-magenta transition-colors"
+                  >
+                    {embalagem.label}
+                  </button>
+                ))}
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                 <div>
                   <Label htmlFor="pesoKg">Peso (kg)</Label>
@@ -275,6 +304,19 @@ export function AdminProdutoForm() {
                   <FieldError message={errors.comprimentoCm?.message} />
                 </div>
               </div>
+            </div>
+
+            <div>
+              <Label htmlFor="tamanhoExibicao">Tamanho para o cliente (opcional)</Label>
+              <Input
+                id="tamanhoExibicao"
+                placeholder="Ex: Tamanho único, 14 cm de altura, P/M/G"
+                {...register("tamanhoExibicao")}
+              />
+              <p className="text-xs text-navy/50 mt-2">
+                Aparece na página do produto no lugar das medidas em cm. Deixe em branco para continuar
+                mostrando a dimensão exata.
+              </p>
             </div>
 
             <div className="space-y-3">

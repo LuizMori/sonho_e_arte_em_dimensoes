@@ -72,6 +72,7 @@ export interface Produto {
   ativo: boolean;
   categoria: CategoriaSlug;
   destaque: boolean;
+  tamanho_exibicao: string | null;
   slug: string;
   created_at: string;
   updated_at: string;

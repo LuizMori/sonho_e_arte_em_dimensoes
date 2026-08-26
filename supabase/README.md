@@ -42,6 +42,9 @@ com a CLI é uma opção futura.
 12. `0012_aviso_estoque.sql` — tabela `stock_notifications`: cliente pede para ser avisado por e-mail
     quando um produto sem estoque for reabastecido. Inserção pública, leitura só do admin; índice único
     parcial evita pedido duplicado enquanto o aviso ainda está pendente. Sem pré-requisito manual.
+13. `0013_tamanho_exibicao.sql` — adiciona `tamanho_exibicao` (texto livre, opcional) a `products`: rótulo
+    amigável mostrado ao cliente no lugar da dimensão em cm (ex: "Tamanho único"), sem afetar os campos
+    numéricos usados para cotar frete. Sem pré-requisito manual.
 
 Depois de rodar a migração 1 e o dono da loja se cadastrar pelo fluxo normal (`/cadastro`), promova a
 conta a admin rodando no SQL Editor:

@@ -134,10 +134,12 @@ export function ProjectDetail() {
     { label: "Categoria", valor: categoria?.nome ?? "" },
     { label: "Preço", valor: produto.preco.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) },
     { label: "Peso", valor: `${produto.peso_kg} kg` },
-    {
-      label: "Dimensões",
-      valor: `${produto.altura_cm} × ${produto.largura_cm} × ${produto.comprimento_cm} cm`,
-    },
+    produto.tamanho_exibicao
+      ? { label: "Tamanho", valor: produto.tamanho_exibicao }
+      : {
+          label: "Dimensões",
+          valor: `${produto.altura_cm} × ${produto.largura_cm} × ${produto.comprimento_cm} cm`,
+        },
     { label: "Disponibilidade", valor: produto.stock > 0 ? `${produto.stock} em estoque` : "Sem estoque" },
   ];
 
