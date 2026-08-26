@@ -330,9 +330,20 @@ export function AdminProdutoForm() {
               </label>
             </div>
 
-            <Button type="submit" disabled={status === "loading"} className="w-full sm:w-auto">
-              {status === "loading" ? "Salvando..." : editando ? "Salvar alterações" : "Criar produto"}
-            </Button>
+            <div className="flex flex-wrap gap-4">
+              <Button type="submit" disabled={status === "loading"} className="w-full sm:w-auto">
+                {status === "loading" ? "Salvando..." : editando ? "Salvar alterações" : "Criar produto"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={status === "loading"}
+                onClick={() => navigate("/admin/produtos")}
+                className="w-full sm:w-auto"
+              >
+                Cancelar
+              </Button>
+            </div>
           </form>
 
           {editando && (

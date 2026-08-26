@@ -95,13 +95,18 @@ export function Portfolio() {
                 <p className="label-caps text-navy/50 mb-4">Já produzimos</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   {galeriaPersonalizados.map((item) => (
-                    <div key={item.id} className="aspect-square overflow-hidden rounded-lg">
-                      <img
-                        src={item.imagem_url}
-                        alt={item.descricao ?? "Peça personalizada já produzida"}
-                        loading="lazy"
-                        className="w-full h-full object-cover img-hover"
-                      />
+                    <div key={item.id}>
+                      <div className="aspect-square overflow-hidden rounded-lg">
+                        <img
+                          src={item.imagem_url}
+                          alt={item.descricao ?? "Peça personalizada já produzida"}
+                          loading="lazy"
+                          className="w-full h-full object-cover img-hover"
+                        />
+                      </div>
+                      {item.descricao && (
+                        <p className="text-navy/60 text-sm mt-2">{item.descricao}</p>
+                      )}
                     </div>
                   ))}
                 </div>

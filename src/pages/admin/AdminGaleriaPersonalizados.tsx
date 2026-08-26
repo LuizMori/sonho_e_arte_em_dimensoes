@@ -4,6 +4,7 @@ import { usePageMeta } from "@/lib/usePageMeta";
 import { Reveal } from "@/components/Reveal";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { Input, Label } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { supabase } from "@/lib/supabaseClient";
 import { uploadCustomGalleryImage } from "@/lib/storage";
@@ -19,6 +20,8 @@ export function AdminGaleriaPersonalizados() {
   const [itens, setItens] = useState<CustomGalleryItem[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [descricao, setDescricao] = useState("");
+  const [arquivo, setArquivo] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
   const carregar = async () => {
@@ -36,8 +39,19 @@ export function AdminGaleriaPersonalizados() {
     carregar();
   }, []);
 
-  const publicarFoto = async (event: ChangeEvent<HTMLInputElement>) => {
-    const arquivo = event.target.files?.[0];
+  const selecionarArquivo = (event: ChangeEvent<HTMLInputElement>) => {
+    const selecionado = event.target.files?.[0];
+    if (!selecionado) return;
+    setArquivo(selecionado);
+    setPreviewUrl(URL.createObjectURL(selecionado));
+  };
+
+  const cancelarSelecao = () => {
+    setArquivo(null);
+    setPreviewUrl(null);
+  };
+
+  const publicarFoto = async () => {
     if (!arquivo) return;
 
     setEnviando(true);
@@ -50,13 +64,13 @@ export function AdminGaleriaPersonalizados() {
       if (error) throw error;
 
       setDescricao("");
+      cancelarSelecao();
       showToast({ title: "Foto publicada na galeria", variant: "success" });
       carregar();
     } catch {
       showToast({ title: "Não foi possível publicar a foto", variant: "error" });
     } finally {
       setEnviando(false);
-      event.target.value = "";
     }
   };
 
@@ -84,6 +98,20 @@ export function AdminGaleriaPersonalizados() {
 
         <Reveal className="border border-neutral-light rounded-xl px-6 py-6 mb-16">
           <p className="label-caps text-navy/70 mb-4">Publicar foto</p>
+
+          {previewUrl && (
+            <div className="flex items-center gap-4 mb-5">
+              <img src={previewUrl} alt="Pré-visualização" className="w-20 h-20 object-cover rounded-lg" />
+              <button
+                type="button"
+                onClick={cancelarSelecao}
+                className="label-caps text-navy/60 hover:text-magenta transition-colors"
+              >
+                Remover seleção
+              </button>
+            </div>
+          )}
+
           <div className="flex flex-wrap items-end gap-4">
             <div className="flex-1 min-w-[200px]">
               <Label htmlFor="descricaoFoto">Descrição (opcional)</Label>
@@ -95,15 +123,12 @@ export function AdminGaleriaPersonalizados() {
               />
             </div>
             <label className="label-caps inline-flex items-center rounded-full border border-navy text-navy px-6 py-3 cursor-pointer hover:border-magenta hover:text-magenta transition-colors shrink-0">
-              {enviando ? "Enviando..." : "Escolher imagem"}
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={publicarFoto}
-                disabled={enviando}
-              />
+              {arquivo ? "Trocar imagem" : "Escolher imagem"}
+              <input type="file" accept="image/*" className="hidden" onChange={selecionarArquivo} disabled={enviando} />
             </label>
+            <Button type="button" onClick={publicarFoto} disabled={!arquivo || enviando}>
+              {enviando ? "Salvando..." : "Salvar"}
+            </Button>
           </div>
         </Reveal>
 
