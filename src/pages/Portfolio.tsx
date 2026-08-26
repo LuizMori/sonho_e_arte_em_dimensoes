@@ -110,29 +110,30 @@ export function Portfolio() {
           </Reveal>
         )}
 
-        {carregando ? (
-          <p className="text-navy/60">Carregando...</p>
-        ) : produtosFiltrados.length === 0 ? (
-          <p className="text-navy/60">Nenhuma peça encontrada nesta categoria no momento.</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
-            {produtosFiltrados.map((produto, index) => {
-              const categoria = categorias.find((c) => c.slug === produto.categoria);
-              const capa = produto.product_images[0];
-              return (
-                <Reveal key={produto.slug} delay={(index % 6) * 60}>
-                  <ProjectCard
-                    to={`/portfolio/${produto.slug}`}
-                    nome={produto.nome}
-                    categoriaNome={categoria?.nome}
-                    imagemUrl={capa?.url}
-                    imagemAlt={capa?.alt || produto.nome}
-                  />
-                </Reveal>
-              );
-            })}
-          </div>
-        )}
+        {categoriaAtiva !== "personalizados" &&
+          (carregando ? (
+            <p className="text-navy/60">Carregando...</p>
+          ) : produtosFiltrados.length === 0 ? (
+            <p className="text-navy/60">Nenhuma peça encontrada nesta categoria no momento.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
+              {produtosFiltrados.map((produto, index) => {
+                const categoria = categorias.find((c) => c.slug === produto.categoria);
+                const capa = produto.product_images[0];
+                return (
+                  <Reveal key={produto.slug} delay={(index % 6) * 60}>
+                    <ProjectCard
+                      to={`/portfolio/${produto.slug}`}
+                      nome={produto.nome}
+                      categoriaNome={categoria?.nome}
+                      imagemUrl={capa?.url}
+                      imagemAlt={capa?.alt || produto.nome}
+                    />
+                  </Reveal>
+                );
+              })}
+            </div>
+          ))}
       </div>
     </section>
   );

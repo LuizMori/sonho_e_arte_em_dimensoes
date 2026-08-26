@@ -12,7 +12,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { uploadProductImage } from "@/lib/storage";
 import { slugify } from "@/lib/utils";
 import { produtoSchema, type ProdutoFormData } from "@/lib/schemas";
-import { categorias } from "@/data/categorias";
+import { categoriasProduto } from "@/data/categorias";
 import type { ProdutoImagemDb } from "@/types";
 
 const EMBALAGENS_PADRAO = [
@@ -251,7 +251,7 @@ export function AdminProdutoForm() {
             <div>
               <Label htmlFor="categoria">Categoria</Label>
               <Select id="categoria" {...register("categoria")}>
-                {categorias.map((categoria) => (
+                {categoriasProduto.map((categoria) => (
                   <option key={categoria.slug} value={categoria.slug}>
                     {categoria.nome}
                   </option>

@@ -52,6 +52,10 @@ com a CLI é uma opção futura.
     peças personalizadas já realizadas, mostradas na categoria "Personalizados" do Portfólio. Leitura
     pública, escrita só do admin. Antes ou depois de rodar este arquivo, crie o bucket `custom-gallery`
     em Storage > New bucket, marcado como **público**.
+16. `0016_remove_categoria_personalizados.sql` — remove `personalizados` do check constraint de
+    `products.categoria`: essa aba do Portfólio passa a ser só informativa (sugestões + galeria),
+    nenhum produto pode mais ser cadastrado nela. Produtos que ainda estivessem em `personalizados`
+    viram `decoracao`. Sem pré-requisito manual.
 
 Depois de rodar a migração 1 e o dono da loja se cadastrar pelo fluxo normal (`/cadastro`), promova a
 conta a admin rodando no SQL Editor:

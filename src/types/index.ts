@@ -4,11 +4,10 @@ export type CategoriaSlug =
   | "papelaria"
   | "religiosos"
   | "geek"
-  | "presentes"
-  | "personalizados";
+  | "presentes";
 
 export interface Categoria {
-  slug: CategoriaSlug;
+  slug: string;
   nome: string;
 }
 

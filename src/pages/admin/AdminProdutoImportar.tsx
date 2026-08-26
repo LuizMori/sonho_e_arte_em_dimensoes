@@ -10,7 +10,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { uploadProductImage } from "@/lib/storage";
 import { slugify } from "@/lib/utils";
 import { parseCsv, linhasParaObjetos, paraLinhaCsv } from "@/lib/csv";
-import { categorias } from "@/data/categorias";
+import { categoriasProduto } from "@/data/categorias";
 import type { CategoriaSlug } from "@/types";
 
 const COLUNAS = [
@@ -83,9 +83,9 @@ function validarLinha(bruto: Record<string, string>, numero: number): LinhaImpor
   if (preco === null || preco <= 0) erros.push("preco inválido");
 
   const categoriaValor = bruto.categoria?.trim().toLowerCase() ?? "";
-  const categoriaValida = categorias.find((c) => c.slug === categoriaValor);
+  const categoriaValida = categoriasProduto.find((c) => c.slug === categoriaValor);
   if (!categoriaValida) {
-    erros.push(`categoria inválida (use: ${categorias.map((c) => c.slug).join(", ")})`);
+    erros.push(`categoria inválida (use: ${categoriasProduto.map((c) => c.slug).join(", ")})`);
   }
 
   const pesoKg = paraNumero(bruto.peso_kg ?? "");
@@ -124,7 +124,7 @@ function validarLinha(bruto: Record<string, string>, numero: number): LinhaImpor
       nome,
       descricao,
       preco: preco as number,
-      categoria: categoriaValida!.slug,
+      categoria: categoriaValida!.slug as CategoriaSlug,
       peso_kg: pesoKg as number,
       altura_cm: alturaCm as number,
       largura_cm: larguraCm as number,
