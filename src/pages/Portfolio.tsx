@@ -154,7 +154,7 @@ export function Portfolio() {
             <p className="text-navy/60">Nenhuma peça encontrada.</p>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
                 {produtosPagina.map((produto, index) => {
                   const categoria = categorias.find((c) => c.slug === produto.categoria);
                   const capa = produto.product_images[0];
