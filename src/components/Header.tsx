@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Menu, ShoppingBag, X } from "lucide-react";
+import { ChevronDown, Menu, ShoppingBag, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/AuthProvider";
 import { useCart } from "@/lib/CartProvider";
+import { contatoInfo } from "@/data/institucional";
 
 const navLinks = [
   { to: "/", label: "Início" },
@@ -11,8 +12,72 @@ const navLinks = [
   { to: "/portfolio", label: "Portfólio" },
   { to: "/servicos", label: "Serviços" },
   { to: "/como-funciona", label: "Como funciona" },
-  { to: "/contato", label: "Contato" },
 ];
+
+const whatsappUrl =
+  contatoInfo.redesSociais.find((rede) => rede.nome === "WhatsApp")?.url ?? "https://wa.me/5511983740584";
+
+function ContatoMenu({ onNavigate }: { onNavigate?: () => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClickFora = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickFora);
+    return () => document.removeEventListener("mousedown", handleClickFora);
+  }, [open]);
+
+  const fechar = () => {
+    setOpen(false);
+    onNavigate?.();
+  };
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={cn(
+          "label-caps flex items-center gap-1 transition-colors",
+          open ? "text-magenta" : "text-navy/70 hover:text-navy"
+        )}
+      >
+        Contato
+        <ChevronDown size={14} className={cn("transition-transform", open && "rotate-180")} />
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full mt-3 w-48 rounded-xl bg-cream-light border border-neutral-light shadow-lg py-2">
+          <Link
+            to="/contato"
+            onClick={fechar}
+            className="block px-4 py-2 text-sm text-navy hover:text-magenta hover:bg-neutral-light/40 transition-colors"
+          >
+            Dúvidas
+          </Link>
+          <Link
+            to="/orcamento"
+            onClick={fechar}
+            className="block px-4 py-2 text-sm text-navy hover:text-magenta hover:bg-neutral-light/40 transition-colors"
+          >
+            Solicitar orçamento
+          </Link>
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noreferrer"
+            onClick={fechar}
+            className="block px-4 py-2 text-sm text-navy hover:text-magenta hover:bg-neutral-light/40 transition-colors"
+          >
+            WhatsApp
+          </a>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
@@ -49,9 +114,8 @@ export function Header() {
       )}
     >
       <div className="container flex items-center justify-between h-20">
-        <Link to="/" className="flex items-center font-display text-xl tracking-tightest text-orange" onClick={() => setOpen(false)}>
-          <span className="hidden sm:inline">Sonho e Arte&nbsp;</span>
-          <span className="sm:hidden">S&A&nbsp;</span>
+        <Link to="/" className="flex flex-col leading-tight font-display text-xl tracking-tightest text-orange" onClick={() => setOpen(false)}>
+          <span>Sonho e Arte</span>
           <span className="font-normal">em Dimensões</span>
         </Link>
 
@@ -76,13 +140,14 @@ export function Header() {
                 {link.label}
               </NavLink>
             ))}
+            <ContatoMenu />
           </nav>
 
           <span className="text-navy/20 text-lg select-none" aria-hidden="true">
             |
           </span>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
             {user ? (
               <div className="flex items-center gap-4">
                 {profile?.role === "admin" && (
@@ -105,12 +170,6 @@ export function Header() {
                 Entrar
               </Link>
             )}
-            <Link
-              to="/orcamento"
-              className="label-caps inline-flex items-center rounded-full bg-navy text-cream-light px-6 py-3 hover:bg-magenta transition-colors"
-            >
-              Solicitar orçamento
-            </Link>
           </div>
         </div>
 
@@ -153,6 +212,33 @@ export function Header() {
                 {link.label}
               </NavLink>
             ))}
+            <NavLink
+              to="/contato"
+              onClick={() => setOpen(false)}
+              className={({ isActive }) =>
+                cn("py-3 border-b border-neutral-light/60 label-caps", isActive ? "text-magenta" : "text-navy")
+              }
+            >
+              Dúvidas
+            </NavLink>
+            <NavLink
+              to="/orcamento"
+              onClick={() => setOpen(false)}
+              className={({ isActive }) =>
+                cn("py-3 border-b border-neutral-light/60 label-caps", isActive ? "text-magenta" : "text-navy")
+              }
+            >
+              Solicitar orçamento
+            </NavLink>
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => setOpen(false)}
+              className="py-3 border-b border-neutral-light/60 label-caps text-navy"
+            >
+              WhatsApp
+            </a>
             {user ? (
               <div className="flex items-center justify-between py-3 border-b border-neutral-light/60">
                 <div className="flex items-center gap-4">
@@ -180,13 +266,6 @@ export function Header() {
                 Entrar
               </NavLink>
             )}
-            <Link
-              to="/orcamento"
-              onClick={() => setOpen(false)}
-              className="mt-5 label-caps inline-flex items-center justify-center rounded-full bg-navy text-cream-light px-6 py-3.5"
-            >
-              Solicitar orçamento
-            </Link>
           </nav>
         </div>
       )}

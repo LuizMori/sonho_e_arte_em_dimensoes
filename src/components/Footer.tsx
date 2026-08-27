@@ -1,5 +1,12 @@
 import { Link } from "react-router-dom";
 import { contatoInfo } from "@/data/institucional";
+import { WhatsAppIcon, InstagramIcon, ShopeeIcon } from "@/components/icons/SocialIcons";
+
+const iconesRedes: Record<string, typeof WhatsAppIcon> = {
+  WhatsApp: WhatsAppIcon,
+  Instagram: InstagramIcon,
+  Shopee: ShopeeIcon,
+};
 
 const colunas = [
   {
@@ -55,19 +62,24 @@ export function Footer() {
             <li>{contatoInfo.email}</li>
             <li>{contatoInfo.whatsapp}</li>
           </ul>
-          <div className="flex gap-4 mt-6">
-            {contatoInfo.redesSociais.map((rede) => (
-              <a
-                key={rede.nome}
-                href={rede.url}
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs text-cream-light/60 hover:text-orange transition-colors"
-              >
-                {rede.nome}
-              </a>
-            ))}
-          </div>
+          <ul className="mt-6 space-y-3">
+            {contatoInfo.redesSociais.map((rede) => {
+              const Icone = iconesRedes[rede.nome];
+              return (
+                <li key={rede.nome}>
+                  <a
+                    href={rede.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-2 text-sm text-cream-light/80 hover:text-orange transition-colors"
+                  >
+                    {Icone && <Icone className="w-5 h-5 shrink-0" />}
+                    {rede.nome}
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       </div>
 
