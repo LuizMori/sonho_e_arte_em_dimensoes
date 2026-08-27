@@ -4,6 +4,7 @@ import { usePageMeta } from "@/lib/usePageMeta";
 import { Reveal } from "@/components/Reveal";
 import { CategoryFilter } from "@/components/CategoryFilter";
 import { ProjectCard } from "@/components/ProjectCard";
+import { Pagination } from "@/components/Pagination";
 import { Button } from "@/components/ui/Button";
 import { supabase } from "@/lib/supabaseClient";
 import { categorias } from "@/data/categorias";
@@ -16,6 +17,8 @@ const SUGESTOES_PERSONALIZADOS = [
   "Logomarca",
 ];
 
+const ITENS_POR_PAGINA = 20;
+
 export function Portfolio() {
   usePageMeta(
     "Portfólio | Sonho e Arte em Dimensões",
@@ -26,6 +29,9 @@ export function Portfolio() {
   const [produtos, setProdutos] = useState<ProdutoComImagens[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [galeriaPersonalizados, setGaleriaPersonalizados] = useState<CustomGalleryItem[]>([]);
+  const [busca, setBusca] = useState("");
+  const [pagina, setPagina] = useState(1);
+  const [mostrarTodos, setMostrarTodos] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -52,9 +58,23 @@ export function Portfolio() {
   }, []);
 
   const produtosFiltrados = useMemo(() => {
-    if (!categoriaAtiva) return produtos;
-    return produtos.filter((produto) => produto.categoria === categoriaAtiva);
-  }, [categoriaAtiva, produtos]);
+    const termo = busca.trim().toLowerCase();
+    return produtos.filter((produto) => {
+      const passaCategoria = !categoriaAtiva || produto.categoria === categoriaAtiva;
+      const passaBusca =
+        !termo || produto.nome.toLowerCase().includes(termo) || produto.descricao.toLowerCase().includes(termo);
+      return passaCategoria && passaBusca;
+    });
+  }, [categoriaAtiva, produtos, busca]);
+
+  useEffect(() => {
+    setPagina(1);
+  }, [categoriaAtiva, busca]);
+
+  const totalPaginas = Math.max(1, Math.ceil(produtosFiltrados.length / ITENS_POR_PAGINA));
+  const produtosPagina = mostrarTodos
+    ? produtosFiltrados
+    : produtosFiltrados.slice((pagina - 1) * ITENS_POR_PAGINA, pagina * ITENS_POR_PAGINA);
 
   return (
     <section className="pt-40 pb-24 md:pt-48 md:pb-32">
@@ -66,9 +86,21 @@ export function Portfolio() {
           </h1>
         </Reveal>
 
-        <Reveal delay={100} className="mb-16">
+        <Reveal delay={100} className="mb-8">
           <CategoryFilter categorias={categorias} ativa={categoriaAtiva} onChange={setCategoriaAtiva} />
         </Reveal>
+
+        {categoriaAtiva !== "personalizados" && (
+          <Reveal delay={150} className="mb-16">
+            <input
+              type="search"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Pesquisar por nome ou descrição..."
+              className="rounded-lg border border-neutral-light px-4 py-2.5 text-sm text-navy bg-cream-light w-full sm:w-80"
+            />
+          </Reveal>
+        )}
 
         {categoriaAtiva === "personalizados" && (
           <Reveal className="mb-16 rounded-2xl border border-neutral-light bg-cream-light/60 p-8 md:p-10">
@@ -119,25 +151,37 @@ export function Portfolio() {
           (carregando ? (
             <p className="text-navy/60">Carregando...</p>
           ) : produtosFiltrados.length === 0 ? (
-            <p className="text-navy/60">Nenhuma peça encontrada nesta categoria no momento.</p>
+            <p className="text-navy/60">Nenhuma peça encontrada.</p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
-              {produtosFiltrados.map((produto, index) => {
-                const categoria = categorias.find((c) => c.slug === produto.categoria);
-                const capa = produto.product_images[0];
-                return (
-                  <Reveal key={produto.slug} delay={(index % 6) * 60}>
-                    <ProjectCard
-                      to={`/portfolio/${produto.slug}`}
-                      nome={produto.nome}
-                      categoriaNome={categoria?.nome}
-                      imagemUrl={capa?.url}
-                      imagemAlt={capa?.alt || produto.nome}
-                    />
-                  </Reveal>
-                );
-              })}
-            </div>
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
+                {produtosPagina.map((produto, index) => {
+                  const categoria = categorias.find((c) => c.slug === produto.categoria);
+                  const capa = produto.product_images[0];
+                  return (
+                    <Reveal key={produto.slug} delay={(index % 6) * 60}>
+                      <ProjectCard
+                        to={`/portfolio/${produto.slug}`}
+                        nome={produto.nome}
+                        categoriaNome={categoria?.nome}
+                        imagemUrl={capa?.url}
+                        imagemAlt={capa?.alt || produto.nome}
+                      />
+                    </Reveal>
+                  );
+                })}
+              </div>
+
+              {produtosFiltrados.length > ITENS_POR_PAGINA && (
+                <Pagination
+                  pagina={pagina}
+                  totalPaginas={totalPaginas}
+                  mostrarTodos={mostrarTodos}
+                  onPaginaChange={setPagina}
+                  onToggleMostrarTodos={() => setMostrarTodos((v) => !v)}
+                />
+              )}
+            </>
           ))}
       </div>
     </section>

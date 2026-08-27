@@ -2,17 +2,23 @@ import { useEffect, useMemo, useState } from "react";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { Reveal } from "@/components/Reveal";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { Pagination } from "@/components/Pagination";
 import { supabase } from "@/lib/supabaseClient";
-import { categorias } from "@/data/categorias";
+import { categorias, categoriasProduto } from "@/data/categorias";
 import type { Produto } from "@/types";
 
 const formatarMoeda = (valor: number) => valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const ITENS_POR_PAGINA = 20;
 
 export function AdminBalanco() {
   usePageMeta("Balanço | Admin | Sonho e Arte em Dimensões", "Balanço do estoque de produtos da loja.");
 
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const [categoriaFiltro, setCategoriaFiltro] = useState("todas");
+  const [busca, setBusca] = useState("");
+  const [pagina, setPagina] = useState(1);
+  const [mostrarTodos, setMostrarTodos] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -28,6 +34,25 @@ export function AdminBalanco() {
     const valorTotal = produtos.reduce((soma, p) => soma + p.stock * p.preco, 0);
     return { total: produtos.length, ativos, semEstoque, valorTotal };
   }, [produtos]);
+
+  const produtosFiltrados = useMemo(() => {
+    const termo = busca.trim().toLowerCase();
+    return produtos.filter((p) => {
+      const passaCategoria = categoriaFiltro === "todas" || p.categoria === categoriaFiltro;
+      const passaBusca =
+        !termo || p.nome.toLowerCase().includes(termo) || p.descricao.toLowerCase().includes(termo);
+      return passaCategoria && passaBusca;
+    });
+  }, [produtos, categoriaFiltro, busca]);
+
+  useEffect(() => {
+    setPagina(1);
+  }, [categoriaFiltro, busca]);
+
+  const totalPaginas = Math.max(1, Math.ceil(produtosFiltrados.length / ITENS_POR_PAGINA));
+  const produtosPagina = mostrarTodos
+    ? produtosFiltrados
+    : produtosFiltrados.slice((pagina - 1) * ITENS_POR_PAGINA, pagina * ITENS_POR_PAGINA);
 
   return (
     <section className="pt-40 pb-24 md:pt-48 md:pb-32">
@@ -64,8 +89,40 @@ export function AdminBalanco() {
               </div>
             </Reveal>
 
+            {produtos.length > 0 && (
+              <Reveal className="flex flex-wrap items-center gap-4 mb-8">
+                <input
+                  type="search"
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  placeholder="Pesquisar por nome ou descrição..."
+                  className="rounded-lg border border-neutral-light px-3 py-2 text-sm text-navy bg-cream-light w-full sm:w-72"
+                />
+                <div className="flex items-center gap-3">
+                  <label htmlFor="categoria-filtro-balanco" className="label-caps text-navy/50">
+                    Categoria
+                  </label>
+                  <select
+                    id="categoria-filtro-balanco"
+                    value={categoriaFiltro}
+                    onChange={(e) => setCategoriaFiltro(e.target.value)}
+                    className="rounded-lg border border-neutral-light px-3 py-2 text-sm text-navy bg-cream-light"
+                  >
+                    <option value="todas">Todas</option>
+                    {categoriasProduto.map((c) => (
+                      <option key={c.slug} value={c.slug}>
+                        {c.nome}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </Reveal>
+            )}
+
             {produtos.length === 0 ? (
               <p className="text-navy/60">Nenhum produto cadastrado ainda.</p>
+            ) : produtosFiltrados.length === 0 ? (
+              <p className="text-navy/60">Nenhum produto encontrado.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -80,7 +137,7 @@ export function AdminBalanco() {
                     </tr>
                   </thead>
                   <tbody>
-                    {produtos.map((produto) => {
+                    {produtosPagina.map((produto) => {
                       const categoria = categorias.find((c) => c.slug === produto.categoria);
                       return (
                         <tr key={produto.id} className="border-b border-neutral-light/60">
@@ -100,6 +157,16 @@ export function AdminBalanco() {
                   </tbody>
                 </table>
               </div>
+            )}
+
+            {produtosFiltrados.length > ITENS_POR_PAGINA && (
+              <Pagination
+                pagina={pagina}
+                totalPaginas={totalPaginas}
+                mostrarTodos={mostrarTodos}
+                onPaginaChange={setPagina}
+                onToggleMostrarTodos={() => setMostrarTodos((v) => !v)}
+              />
             )}
           </>
         )}
