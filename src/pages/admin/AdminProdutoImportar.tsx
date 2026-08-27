@@ -11,26 +11,10 @@ import { uploadProductImage } from "@/lib/storage";
 import { slugify } from "@/lib/utils";
 import { parseCsv, linhasParaObjetos, paraLinhaCsv } from "@/lib/csv";
 import { categoriasProduto } from "@/data/categorias";
+import { COLUNAS_PRODUTO_CSV } from "@/data/produtoCsvColunas";
 import type { CategoriaSlug, Color } from "@/types";
 
-const COLUNAS = [
-  "nome",
-  "descricao",
-  "preco",
-  "categoria",
-  "peso_kg",
-  "altura_cm",
-  "largura_cm",
-  "comprimento_cm",
-  "stock",
-  "ativo",
-  "destaque",
-  "fotos",
-  "slug",
-  "tamanho_exibicao",
-  "cores",
-  "variacoes",
-] as const;
+const COLUNAS = COLUNAS_PRODUTO_CSV;
 
 interface LinhaImportacao {
   numero: number;

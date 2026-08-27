@@ -71,3 +71,14 @@ export function paraLinhaCsv(campos: string[]): string {
     })
     .join(",");
 }
+
+export function baixarCsv(nomeArquivo: string, cabecalho: string[], linhas: string[][]): void {
+  const conteudo = [paraLinhaCsv(cabecalho), ...linhas.map(paraLinhaCsv)].join("\n");
+  const blob = new Blob([conteudo], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = nomeArquivo;
+  link.click();
+  URL.revokeObjectURL(url);
+}

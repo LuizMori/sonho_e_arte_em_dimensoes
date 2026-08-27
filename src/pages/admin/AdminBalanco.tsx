@@ -3,12 +3,15 @@ import { usePageMeta } from "@/lib/usePageMeta";
 import { Reveal } from "@/components/Reveal";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { Pagination } from "@/components/Pagination";
+import { Button } from "@/components/ui/Button";
 import { supabase } from "@/lib/supabaseClient";
+import { baixarCsv } from "@/lib/csv";
 import { categorias, categoriasProduto } from "@/data/categorias";
 import type { Produto } from "@/types";
 
 const formatarMoeda = (valor: number) => valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const ITENS_POR_PAGINA = 20;
+const COLUNAS_BALANCO = ["produto", "categoria", "estoque", "preco", "valor_total", "status"];
 
 export function AdminBalanco() {
   usePageMeta("Balanço | Admin | Sonho e Arte em Dimensões", "Balanço do estoque de produtos da loja.");
@@ -54,14 +57,36 @@ export function AdminBalanco() {
     ? produtosFiltrados
     : produtosFiltrados.slice((pagina - 1) * ITENS_POR_PAGINA, pagina * ITENS_POR_PAGINA);
 
+  const exportarCsv = () => {
+    const linhas = produtosFiltrados.map((p) => {
+      const categoria = categorias.find((c) => c.slug === p.categoria);
+      return [
+        p.nome,
+        categoria?.nome ?? p.categoria,
+        String(p.stock),
+        String(p.preco),
+        String(p.stock * p.preco),
+        p.ativo ? "Ativo" : "Inativo",
+      ];
+    });
+    baixarCsv("balanco-produtos.csv", COLUNAS_BALANCO, linhas);
+  };
+
   return (
     <section className="pt-40 pb-24 md:pt-48 md:pb-32">
       <div className="container">
-        <Reveal className="mb-12">
-          <p className="label-caps text-magenta mb-6">Painel admin</p>
-          <h1 className="font-display text-5xl sm:text-6xl tracking-tightest text-navy leading-[1.05]">
-            Balanço de produtos
-          </h1>
+        <Reveal className="flex flex-wrap items-center justify-between gap-6 mb-12">
+          <div>
+            <p className="label-caps text-magenta mb-6">Painel admin</p>
+            <h1 className="font-display text-5xl sm:text-6xl tracking-tightest text-navy leading-[1.05]">
+              Balanço de produtos
+            </h1>
+          </div>
+          {!carregando && produtos.length > 0 && (
+            <Button type="button" variant="outline" onClick={exportarCsv}>
+              Exportar CSV
+            </Button>
+          )}
         </Reveal>
 
         <AdminNav />

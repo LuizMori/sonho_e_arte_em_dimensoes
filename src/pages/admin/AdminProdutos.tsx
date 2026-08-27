@@ -7,7 +7,9 @@ import { Pagination } from "@/components/Pagination";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { supabase } from "@/lib/supabaseClient";
+import { baixarCsv } from "@/lib/csv";
 import { categoriasProduto } from "@/data/categorias";
+import { COLUNAS_PRODUTO_CSV } from "@/data/produtoCsvColunas";
 import type { Produto } from "@/types";
 
 const ITENS_POR_PAGINA = 20;
@@ -56,6 +58,28 @@ export function AdminProdutos() {
     ? produtosFiltrados
     : produtosFiltrados.slice((pagina - 1) * ITENS_POR_PAGINA, pagina * ITENS_POR_PAGINA);
 
+  const exportarCsv = () => {
+    const linhas = produtosFiltrados.map((p) => [
+      p.nome,
+      p.descricao,
+      String(p.preco),
+      p.categoria,
+      String(p.peso_kg),
+      String(p.altura_cm),
+      String(p.largura_cm),
+      String(p.comprimento_cm),
+      String(p.stock),
+      p.ativo ? "sim" : "nao",
+      p.destaque ? "sim" : "nao",
+      "",
+      p.slug,
+      p.tamanho_exibicao ?? "",
+      "",
+      "",
+    ]);
+    baixarCsv("produtos.csv", [...COLUNAS_PRODUTO_CSV], linhas);
+  };
+
   const excluir = async (id: string) => {
     if (!window.confirm("Excluir este produto? Essa ação não pode ser desfeita.")) return;
     const { error } = await supabase.from("products").delete().eq("id", id);
@@ -76,7 +100,12 @@ export function AdminProdutos() {
               Produtos
             </h1>
           </div>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
+            {produtos.length > 0 && (
+              <Button type="button" variant="outline" onClick={exportarCsv}>
+                Exportar CSV
+              </Button>
+            )}
             <Link to="/admin/produtos/importar">
               <Button variant="outline">Importar CSV</Button>
             </Link>
