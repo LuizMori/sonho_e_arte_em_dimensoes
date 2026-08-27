@@ -9,6 +9,7 @@ export const categoriasProduto: Categoria[] = [
   { slug: "religiosos", nome: "Religiosos" },
   { slug: "geek", nome: "Geek" },
   { slug: "presentes", nome: "Presentes" },
+  { slug: "sazonais", nome: "Sazonais" },
 ];
 
 // Abas do filtro do Portfólio: as categorias de produto + "Personalizados", que não é
