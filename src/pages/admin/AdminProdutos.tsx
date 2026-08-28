@@ -64,7 +64,7 @@ export function AdminProdutos() {
       p.descricao,
       String(p.preco),
       p.categoria,
-      String(p.peso_kg),
+      String(p.peso_g),
       String(p.altura_cm),
       String(p.largura_cm),
       String(p.comprimento_cm),

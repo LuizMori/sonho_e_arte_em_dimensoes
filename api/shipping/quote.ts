@@ -33,7 +33,7 @@ interface OpcaoFrete {
 
 interface ItemFrete {
   quantidade: number;
-  pesoKg: number;
+  pesoG: number;
   alturaCm: number;
   larguraCm: number;
   comprimentoCm: number;
@@ -53,7 +53,7 @@ async function cotarFrete(cepOrigem: string, cepDestino: string, itens: ItemFret
       width: item.larguraCm,
       height: item.alturaCm,
       length: item.comprimentoCm,
-      weight: item.pesoKg,
+      weight: item.pesoG / 1000,
       quantity: item.quantidade,
       insurance_value: 0,
     })),
@@ -119,7 +119,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const ids = itens.map((item) => item.productId);
     const { data: produtos, error } = await supabase
       .from("products")
-      .select("id, peso_kg, altura_cm, largura_cm, comprimento_cm")
+      .select("id, peso_g, altura_cm, largura_cm, comprimento_cm")
       .in("id", ids);
 
     if (error || !produtos) {
@@ -131,7 +131,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!produto) throw new Error(`Produto ${item.productId} não encontrado`);
       return {
         quantidade: item.quantidade,
-        pesoKg: produto.peso_kg,
+        pesoG: produto.peso_g,
         alturaCm: produto.altura_cm,
         larguraCm: produto.largura_cm,
         comprimentoCm: produto.comprimento_cm,

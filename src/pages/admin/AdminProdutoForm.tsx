@@ -16,9 +16,9 @@ import { categoriasProduto } from "@/data/categorias";
 import type { Color, ProdutoImagemDb } from "@/types";
 
 const EMBALAGENS_PADRAO = [
-  { label: "Pequena", pesoKg: 0.2, alturaCm: 10, larguraCm: 10, comprimentoCm: 10 },
-  { label: "Média", pesoKg: 0.6, alturaCm: 18, larguraCm: 15, comprimentoCm: 15 },
-  { label: "Grande", pesoKg: 1.5, alturaCm: 30, larguraCm: 25, comprimentoCm: 20 },
+  { label: "Pequena", pesoG: 200, alturaCm: 10, larguraCm: 10, comprimentoCm: 10 },
+  { label: "Média", pesoG: 600, alturaCm: 18, larguraCm: 15, comprimentoCm: 15 },
+  { label: "Grande", pesoG: 1500, alturaCm: 30, larguraCm: 25, comprimentoCm: 20 },
 ] as const;
 
 export function AdminProdutoForm() {
@@ -84,7 +84,7 @@ export function AdminProdutoForm() {
           preco: produto.preco,
           categoria: produto.categoria,
           destaque: produto.destaque,
-          pesoKg: produto.peso_kg,
+          pesoG: produto.peso_g,
           alturaCm: produto.altura_cm,
           larguraCm: produto.largura_cm,
           comprimentoCm: produto.comprimento_cm,
@@ -154,7 +154,7 @@ export function AdminProdutoForm() {
       preco: data.preco,
       categoria: data.categoria,
       destaque: data.destaque,
-      peso_kg: data.pesoKg,
+      peso_g: data.pesoG,
       altura_cm: data.alturaCm,
       largura_cm: data.larguraCm,
       comprimento_cm: data.comprimentoCm,
@@ -367,7 +367,7 @@ export function AdminProdutoForm() {
                     key={embalagem.label}
                     type="button"
                     onClick={() => {
-                      setValue("pesoKg", embalagem.pesoKg, { shouldValidate: true });
+                      setValue("pesoG", embalagem.pesoG, { shouldValidate: true });
                       setValue("alturaCm", embalagem.alturaCm, { shouldValidate: true });
                       setValue("larguraCm", embalagem.larguraCm, { shouldValidate: true });
                       setValue("comprimentoCm", embalagem.comprimentoCm, { shouldValidate: true });
@@ -380,9 +380,9 @@ export function AdminProdutoForm() {
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                 <div>
-                  <Label htmlFor="pesoKg">Peso (kg)</Label>
-                  <Input id="pesoKg" type="number" step="0.001" min="0" {...register("pesoKg")} />
-                  <FieldError message={errors.pesoKg?.message} />
+                  <Label htmlFor="pesoG">Peso (g)</Label>
+                  <Input id="pesoG" type="number" step="1" min="0" {...register("pesoG")} />
+                  <FieldError message={errors.pesoG?.message} />
                 </div>
                 <div>
                   <Label htmlFor="alturaCm">Altura (cm)</Label>

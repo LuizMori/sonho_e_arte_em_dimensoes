@@ -151,7 +151,7 @@ export function ProjectDetail() {
   const metadados = [
     { label: "Categoria", valor: categoria?.nome ?? "" },
     { label: "Preço", valor: produto.preco.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) },
-    { label: "Peso", valor: `${produto.peso_kg} kg` },
+    { label: "Peso", valor: `${produto.peso_g} g` },
     produto.tamanho_exibicao
       ? { label: "Tamanho", valor: produto.tamanho_exibicao }
       : {

@@ -25,7 +25,7 @@ interface LinhaImportacao {
     descricao: string;
     preco: number;
     categoria: CategoriaSlug;
-    peso_kg: number;
+    peso_g: number;
     altura_cm: number;
     largura_cm: number;
     comprimento_cm: number;
@@ -76,8 +76,8 @@ function validarLinha(bruto: Record<string, string>, numero: number): LinhaImpor
     erros.push(`categoria inválida (use: ${categoriasProduto.map((c) => c.slug).join(", ")})`);
   }
 
-  const pesoKg = paraNumero(bruto.peso_kg ?? "");
-  if (pesoKg === null || pesoKg <= 0) erros.push("peso_kg inválido");
+  const pesoG = paraNumero(bruto.peso_g ?? "");
+  if (pesoG === null || pesoG <= 0 || !Number.isInteger(pesoG)) erros.push("peso_g inválido");
 
   const alturaCm = paraNumero(bruto.altura_cm ?? "");
   if (alturaCm === null || alturaCm <= 0) erros.push("altura_cm inválido");
@@ -123,7 +123,7 @@ function validarLinha(bruto: Record<string, string>, numero: number): LinhaImpor
       descricao,
       preco: preco as number,
       categoria: categoriaValida!.slug as CategoriaSlug,
-      peso_kg: pesoKg as number,
+      peso_g: pesoG as number,
       altura_cm: alturaCm as number,
       largura_cm: larguraCm as number,
       comprimento_cm: comprimentoCm as number,
@@ -183,7 +183,7 @@ export function AdminProdutoImportar() {
       "Ursinho decorativo impresso em PLA, acabamento liso e pintura à mão.",
       "49.90",
       "decoracao",
-      "0.150",
+      "150",
       "12",
       "8",
       "8",
@@ -244,7 +244,7 @@ export function AdminProdutoImportar() {
         descricao: dados.descricao,
         preco: dados.preco,
         categoria: dados.categoria,
-        peso_kg: dados.peso_kg,
+        peso_g: dados.peso_g,
         altura_cm: dados.altura_cm,
         largura_cm: dados.largura_cm,
         comprimento_cm: dados.comprimento_cm,

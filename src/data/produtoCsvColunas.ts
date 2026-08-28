@@ -5,7 +5,7 @@ export const COLUNAS_PRODUTO_CSV = [
   "descricao",
   "preco",
   "categoria",
-  "peso_kg",
+  "peso_g",
   "altura_cm",
   "largura_cm",
   "comprimento_cm",

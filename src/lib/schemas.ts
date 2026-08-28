@@ -77,7 +77,7 @@ export const produtoSchema = z.object({
     required_error: "Selecione uma categoria",
   }),
   destaque: z.boolean(),
-  pesoKg: z.coerce.number().positive("Informe o peso em kg"),
+  pesoG: z.coerce.number().int("Informe o peso em gramas").positive("Informe o peso em gramas"),
   alturaCm: z.coerce.number().positive("Informe a altura em cm"),
   larguraCm: z.coerce.number().positive("Informe a largura em cm"),
   comprimentoCm: z.coerce.number().positive("Informe a profundidade em cm"),

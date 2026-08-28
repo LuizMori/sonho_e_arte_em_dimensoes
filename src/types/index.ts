@@ -85,7 +85,7 @@ export interface Produto {
   nome: string;
   descricao: string;
   preco: number;
-  peso_kg: number;
+  peso_g: number;
   altura_cm: number;
   largura_cm: number;
   comprimento_cm: number;
