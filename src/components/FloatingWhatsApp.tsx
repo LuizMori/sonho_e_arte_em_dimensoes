@@ -3,7 +3,7 @@ import { WhatsAppIcon } from "@/components/icons/SocialIcons";
 import { contatoInfo } from "@/data/institucional";
 
 const whatsappUrl =
-  contatoInfo.redesSociais.find((rede) => rede.nome === "WhatsApp")?.url ?? "https://wa.me/5511983740584";
+  contatoInfo.redesSociais.find((rede) => rede.nome === "WhatsApp")?.url ?? "https://wa.me/5519995403588";
 
 export function FloatingWhatsApp() {
   const { pathname } = useLocation();

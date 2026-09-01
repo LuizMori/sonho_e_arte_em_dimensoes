@@ -21,9 +21,9 @@ export const historiaSobre: InformacaoInstitucional = {
 
 export const contatoInfo: ContatoInfo = {
   email: "contato@sonhoearte3d.com.br",
-  whatsapp: "(11) 98374-0584",
+  whatsapp: "(19) 99540-3588",
   redesSociais: [
-    { nome: "WhatsApp", url: "https://wa.me/5511983740584?text=Ol%C3%A1%21%20Encontrei%20o%20WhatsApp%20da%20Sonho%20e%20Arte%20em%20Dimens%C3%B5es%20pelo%20site%20e%20gostaria%20de%20solicitar%20um%20or%C3%A7amento%20para%20um%20projeto%20de%20impress%C3%A3o%203D" },
+    { nome: "WhatsApp", url: "https://wa.me/5519995403588?text=Ol%C3%A1%21%20Encontrei%20o%20WhatsApp%20da%20Sonho%20e%20Arte%20em%20Dimens%C3%B5es%20pelo%20site%20e%20gostaria%20de%20solicitar%20um%20or%C3%A7amento%20para%20um%20projeto%20de%20impress%C3%A3o%203D" },
     { nome: "Instagram", url: "https://www.instagram.com/sonhoearte.3d?igsi=bzdvZjk3OXp3NmF5" },
     { nome: "Shopee", url: "https://br.shp.ee/xrexNYpP?share_channel_code=1" },
   ],

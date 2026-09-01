@@ -15,7 +15,7 @@ const navLinks = [
 ];
 
 const whatsappUrl =
-  contatoInfo.redesSociais.find((rede) => rede.nome === "WhatsApp")?.url ?? "https://wa.me/5511983740584";
+  contatoInfo.redesSociais.find((rede) => rede.nome === "WhatsApp")?.url ?? "https://wa.me/5519995403588";
 
 function ContatoMenu({ onNavigate }: { onNavigate?: () => void }) {
   const [open, setOpen] = useState(false);
