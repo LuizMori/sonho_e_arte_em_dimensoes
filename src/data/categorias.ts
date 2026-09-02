@@ -4,7 +4,7 @@ import type { Categoria } from "@/types";
 // constraint de products.categoria).
 export const categoriasProduto: Categoria[] = [
   { slug: "decoracao", nome: "Decoração" },
-  { slug: "educativos", nome: "Educativos" },
+  { slug: "educativos", nome: "Diversão" },
   { slug: "papelaria", nome: "Papelaria" },
   { slug: "religiosos", nome: "Religiosos" },
   { slug: "geek", nome: "Geek" },
