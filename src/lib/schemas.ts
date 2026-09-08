@@ -73,9 +73,10 @@ export const produtoSchema = z.object({
   nome: z.string().trim().min(2, "Informe o nome do produto"),
   descricao: z.string().trim().min(10, "Descreva o produto com pelo menos 10 caracteres"),
   preco: z.coerce.number().positive("Informe um preço válido"),
-  categoria: z.enum(["decoracao", "educativos", "papelaria", "religiosos", "geek", "presentes", "sazonais"], {
-    required_error: "Selecione uma categoria",
-  }),
+  categoria: z.enum(
+    ["decoracao", "educativos", "papelaria", "religiosos", "geek", "presentes", "sazonais", "utilidades"],
+    { required_error: "Selecione uma categoria" }
+  ),
   destaque: z.boolean(),
   pesoG: z.coerce.number().int("Informe o peso em gramas").positive("Informe o peso em gramas"),
   alturaCm: z.coerce.number().positive("Informe a altura em cm"),

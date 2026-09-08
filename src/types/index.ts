@@ -5,7 +5,8 @@ export type CategoriaSlug =
   | "religiosos"
   | "geek"
   | "presentes"
-  | "sazonais";
+  | "sazonais"
+  | "utilidades";
 
 export interface Categoria {
   slug: string;
