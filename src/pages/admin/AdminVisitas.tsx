@@ -4,7 +4,7 @@ import { Reveal } from "@/components/Reveal";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { supabase } from "@/lib/supabaseClient";
 import { categorias } from "@/data/categorias";
-import type { CategoriaSlug, PageView } from "@/types";
+import type { CategoriaSlug } from "@/types";
 
 const PREFIXO_PRODUTO = "/portfolio/";
 
@@ -13,11 +13,23 @@ interface ProdutoResumo {
   categoria: CategoriaSlug;
 }
 
+interface DiaAgregadoDb {
+  dia: string;
+  visualizacoes: number;
+  visitantes: number;
+}
+
+interface PaginaAgregadaDb {
+  path: string;
+  visualizacoes: number;
+}
+
 const DIAS_JANELA = 30;
 const DIAS_EXIBIDOS = 14;
 
-// Todo o agrupamento por dia usa o horário de Brasília, não UTC — sem isso, visitas
-// feitas à noite (depois de 21h em Brasília) já contavam como "amanhã".
+// O agrupamento por dia acontece no banco (função estatisticas_visitas_por_dia), já no
+// horário de Brasília — sem isso, visitas feitas à noite (depois de 21h em Brasília) já
+// contariam como "amanhã".
 const FUSO_HORARIO = "America/Sao_Paulo";
 
 const formatarDataChave = (data: Date) =>
@@ -37,24 +49,21 @@ interface DiaAgregado {
 export function AdminVisitas() {
   usePageMeta("Visitas | Admin | Sonho e Arte em Dimensões", "Acompanhe as visitas diárias ao site.");
 
-  const [visitas, setVisitas] = useState<PageView[]>([]);
+  const [diasAgregados, setDiasAgregados] = useState<DiaAgregadoDb[]>([]);
+  const [paginasAgregadas, setPaginasAgregadas] = useState<PaginaAgregadaDb[]>([]);
   const [produtosPorSlug, setProdutosPorSlug] = useState<Map<string, ProdutoResumo>>(new Map());
   const [carregando, setCarregando] = useState(true);
   const [filtroCategoria, setFiltroCategoria] = useState<CategoriaSlug | "todos">("todos");
 
   useEffect(() => {
     (async () => {
-      const desde = new Date();
-      desde.setDate(desde.getDate() - DIAS_JANELA);
-      const [{ data: views }, { data: produtos }] = await Promise.all([
-        supabase
-          .from("page_views")
-          .select("*")
-          .gte("created_at", desde.toISOString())
-          .order("created_at", { ascending: true }),
+      const [{ data: porDiaDb }, { data: porPaginaDb }, { data: produtos }] = await Promise.all([
+        supabase.rpc("estatisticas_visitas_por_dia", { p_dias: DIAS_JANELA }),
+        supabase.rpc("estatisticas_visitas_por_pagina", { p_dias: DIAS_JANELA }),
         supabase.from("products").select("nome, slug, categoria"),
       ]);
-      setVisitas((views as PageView[]) ?? []);
+      setDiasAgregados((porDiaDb as DiaAgregadoDb[]) ?? []);
+      setPaginasAgregadas((porPaginaDb as PaginaAgregadaDb[]) ?? []);
       setProdutosPorSlug(
         new Map((produtos ?? []).map((p) => [p.slug, { nome: p.nome, categoria: p.categoria }]))
       );
@@ -63,14 +72,7 @@ export function AdminVisitas() {
   }, []);
 
   const porDia = useMemo(() => {
-    const mapa = new Map<string, { visualizacoes: number; sessoes: Set<string> }>();
-    for (const visita of visitas) {
-      const chave = formatarDataChave(new Date(visita.created_at));
-      const entrada = mapa.get(chave) ?? { visualizacoes: 0, sessoes: new Set<string>() };
-      entrada.visualizacoes += 1;
-      entrada.sessoes.add(visita.session_id);
-      mapa.set(chave, entrada);
-    }
+    const mapa = new Map(diasAgregados.map((d) => [d.dia, d]));
 
     const hojeChave = formatarDataChave(new Date());
     const ancora = new Date(`${hojeChave}T12:00:00Z`);
@@ -84,52 +86,53 @@ export function AdminVisitas() {
       dias.push({
         chave,
         visualizacoes: entrada?.visualizacoes ?? 0,
-        visitantes: entrada?.sessoes.size ?? 0,
+        visitantes: entrada?.visitantes ?? 0,
       });
     }
     return dias;
-  }, [visitas]);
+  }, [diasAgregados]);
 
   const resumo = useMemo(() => {
     const hojeChave = formatarDataChave(new Date());
+    const hoje = diasAgregados.find((d) => d.dia === hojeChave);
+
     const seteDiasAtras = new Date();
     seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
+    const seteDiasChave = formatarDataChave(seteDiasAtras);
 
-    const hoje = visitas.filter((v) => formatarDataChave(new Date(v.created_at)) === hojeChave);
-    const ultimos7 = visitas.filter((v) => new Date(v.created_at) >= seteDiasAtras);
+    const ultimos7 = diasAgregados
+      .filter((d) => d.dia >= seteDiasChave)
+      .reduce((soma, d) => soma + d.visualizacoes, 0);
+    const ultimos30 = diasAgregados.reduce((soma, d) => soma + d.visualizacoes, 0);
 
     return {
-      hoje: hoje.length,
-      visitantesHoje: new Set(hoje.map((v) => v.session_id)).size,
-      ultimos7: ultimos7.length,
-      ultimos30: visitas.length,
+      hoje: hoje?.visualizacoes ?? 0,
+      visitantesHoje: hoje?.visitantes ?? 0,
+      ultimos7,
+      ultimos30,
     };
-  }, [visitas]);
+  }, [diasAgregados]);
 
   const produtosMaisVistos = useMemo(() => {
-    const mapa = new Map<string, number>();
-    for (const visita of visitas) {
-      if (!visita.path.startsWith(PREFIXO_PRODUTO)) continue;
-      const slug = visita.path.slice(PREFIXO_PRODUTO.length);
-      if (filtroCategoria !== "todos" && produtosPorSlug.get(slug)?.categoria !== filtroCategoria) continue;
-      mapa.set(slug, (mapa.get(slug) ?? 0) + 1);
-    }
-    return [...mapa.entries()]
-      .map(([slug, total]) => ({ nome: produtosPorSlug.get(slug)?.nome ?? slug, total }))
+    return paginasAgregadas
+      .filter((p) => p.path.startsWith(PREFIXO_PRODUTO))
+      .map((p) => {
+        const slug = p.path.slice(PREFIXO_PRODUTO.length);
+        return { slug, ...p, produto: produtosPorSlug.get(slug) };
+      })
+      .filter((p) => filtroCategoria === "todos" || p.produto?.categoria === filtroCategoria)
+      .map((p) => ({ nome: p.produto?.nome ?? p.slug, total: p.visualizacoes }))
       .sort((a, b) => b.total - a.total)
       .slice(0, 8);
-  }, [visitas, produtosPorSlug, filtroCategoria]);
+  }, [paginasAgregadas, produtosPorSlug, filtroCategoria]);
 
   const paginasMaisVisitadas = useMemo(() => {
-    const mapa = new Map<string, number>();
-    for (const visita of visitas) {
-      if (visita.path.startsWith(PREFIXO_PRODUTO)) continue;
-      mapa.set(visita.path, (mapa.get(visita.path) ?? 0) + 1);
-    }
-    return [...mapa.entries()]
+    return paginasAgregadas
+      .filter((p) => !p.path.startsWith(PREFIXO_PRODUTO))
+      .map((p) => [p.path, p.visualizacoes] as const)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5);
-  }, [visitas]);
+  }, [paginasAgregadas]);
 
   const maxVisualizacoes = Math.max(1, ...porDia.map((d) => d.visualizacoes));
 
