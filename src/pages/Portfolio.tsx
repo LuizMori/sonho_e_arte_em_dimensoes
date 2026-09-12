@@ -8,7 +8,7 @@ import { Pagination } from "@/components/Pagination";
 import { Button } from "@/components/ui/Button";
 import { supabase } from "@/lib/supabaseClient";
 import { categorias } from "@/data/categorias";
-import type { CustomGalleryItem, ProdutoComImagens } from "@/types";
+import type { CharmManiaGalleryItem, CustomGalleryItem, ProdutoComImagens } from "@/types";
 
 const SUGESTOES_PERSONALIZADOS = [
   "Brindes empresariais",
@@ -18,6 +18,11 @@ const SUGESTOES_PERSONALIZADOS = [
 ];
 
 const ITENS_POR_PAGINA = 20;
+
+// Personalizados e Charm Mania não são grades de produtos para filtrar/pesquisar — são
+// abas de destaque com conteúdo próprio (a primeira é 100% sob encomenda via orçamento; a
+// segunda é a peça montável, com um único produto por trás).
+const ABAS_DE_DESTAQUE = ["personalizados", "charm-mania"];
 
 export function Portfolio() {
   usePageMeta(
@@ -29,6 +34,7 @@ export function Portfolio() {
   const [produtos, setProdutos] = useState<ProdutoComImagens[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [galeriaPersonalizados, setGaleriaPersonalizados] = useState<CustomGalleryItem[]>([]);
+  const [galeriaCharmMania, setGaleriaCharmMania] = useState<CharmManiaGalleryItem[]>([]);
   const [busca, setBusca] = useState("");
   const [pagina, setPagina] = useState(1);
   const [mostrarTodos, setMostrarTodos] = useState(false);
@@ -39,6 +45,7 @@ export function Portfolio() {
         .from("products")
         .select("*, product_images(*)")
         .eq("ativo", true)
+        .eq("exibir_catalogo", true)
         .order("created_at", { ascending: false })
         .order("ordem", { referencedTable: "product_images" });
       setProdutos((data as ProdutoComImagens[]) ?? []);
@@ -54,6 +61,17 @@ export function Portfolio() {
         .order("ordem", { ascending: true })
         .order("created_at", { ascending: false });
       setGaleriaPersonalizados((data as CustomGalleryItem[]) ?? []);
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("charm_mania_gallery")
+        .select("*")
+        .order("ordem", { ascending: true })
+        .order("created_at", { ascending: false });
+      setGaleriaCharmMania((data as CharmManiaGalleryItem[]) ?? []);
     })();
   }, []);
 
@@ -90,7 +108,7 @@ export function Portfolio() {
           <CategoryFilter categorias={categorias} ativa={categoriaAtiva} onChange={setCategoriaAtiva} />
         </Reveal>
 
-        {categoriaAtiva !== "personalizados" && (
+        {!ABAS_DE_DESTAQUE.includes(categoriaAtiva ?? "") && (
           <Reveal delay={150} className="mb-16">
             <input
               type="search"
@@ -147,7 +165,44 @@ export function Portfolio() {
           </Reveal>
         )}
 
-        {categoriaAtiva !== "personalizados" &&
+        {categoriaAtiva === "charm-mania" && (
+          <Reveal className="mb-16 rounded-2xl border border-neutral-light bg-cream-light/60 p-8 md:p-10">
+            <p className="label-caps text-magenta mb-3">Monte a sua</p>
+            <h2 className="font-display text-2xl md:text-3xl text-navy tracking-tightest mb-4 max-w-xl">
+              Charm Mania: sua palavra e os pingentes que você escolher, montados do seu jeito.
+            </h2>
+            <p className="text-navy/70 mb-8 max-w-2xl">
+              Combine letras e pingentes na ordem que quiser e monte uma peça única, com o preço somando em
+              tempo real.
+            </p>
+            <Link to="/portfolio/charm-mania">
+              <Button>Montar minha Charm Mania</Button>
+            </Link>
+
+            {galeriaCharmMania.length > 0 && (
+              <div className="mt-10 pt-8 border-t border-neutral-light/70">
+                <p className="label-caps text-navy/50 mb-4">Já produzimos</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {galeriaCharmMania.map((item) => (
+                    <div key={item.id}>
+                      <div className="aspect-square overflow-hidden rounded-lg">
+                        <img
+                          src={item.imagem_url}
+                          alt={item.descricao ?? "Peça Charm Mania já produzida"}
+                          loading="lazy"
+                          className="w-full h-full object-cover img-hover"
+                        />
+                      </div>
+                      {item.descricao && <p className="text-navy/60 text-sm mt-2">{item.descricao}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Reveal>
+        )}
+
+        {!ABAS_DE_DESTAQUE.includes(categoriaAtiva ?? "") &&
           (carregando ? (
             <p className="text-navy/60">Carregando...</p>
           ) : produtosFiltrados.length === 0 ? (

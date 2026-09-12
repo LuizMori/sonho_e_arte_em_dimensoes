@@ -10,6 +10,7 @@ const navLinks = [
   { to: "/", label: "Início" },
   { to: "/sobre", label: "Sobre" },
   { to: "/portfolio", label: "Portfólio" },
+  { to: "/portfolio/charm-mania", label: "Charm Mania" },
   { to: "/servicos", label: "Serviços" },
   { to: "/como-funciona", label: "Como funciona" },
 ];
@@ -132,7 +133,7 @@ export function Header() {
                 end={link.to === "/"}
                 className={({ isActive }) =>
                   cn(
-                    "label-caps transition-colors",
+                    "label-caps whitespace-nowrap transition-colors",
                     isActive ? "text-magenta" : "text-navy/70 hover:text-navy"
                   )
                 }

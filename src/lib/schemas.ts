@@ -74,7 +74,17 @@ export const produtoSchema = z.object({
   descricao: z.string().trim().min(10, "Descreva o produto com pelo menos 10 caracteres"),
   preco: z.coerce.number().positive("Informe um preço válido"),
   categoria: z.enum(
-    ["decoracao", "educativos", "papelaria", "religiosos", "geek", "presentes", "sazonais", "utilidades"],
+    [
+      "decoracao",
+      "educativos",
+      "papelaria",
+      "religiosos",
+      "geek",
+      "presentes",
+      "sazonais",
+      "utilidades",
+      "charm-mania",
+    ],
     { required_error: "Selecione uma categoria" }
   ),
   destaque: z.boolean(),
@@ -85,6 +95,14 @@ export const produtoSchema = z.object({
   stock: z.coerce.number().int().min(0, "Informe a quantidade em estoque"),
   ativo: z.boolean(),
   tamanhoExibicao: z.string().trim().optional(),
+  valorLetra: z.preprocess(
+    (valor) => (valor === "" || valor === null || valor === undefined ? undefined : valor),
+    z.coerce.number().positive("Informe o valor por letra").optional()
+  ),
+  limiteContas: z.preprocess(
+    (valor) => (valor === "" || valor === null || valor === undefined ? undefined : valor),
+    z.coerce.number().int("Informe um número inteiro").positive("Informe um número maior que zero").optional()
+  ),
 });
 
 export type ProdutoFormData = z.infer<typeof produtoSchema>;

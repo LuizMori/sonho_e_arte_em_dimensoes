@@ -13,7 +13,8 @@ import { useCart } from "@/lib/CartProvider";
 import { useAuth } from "@/lib/AuthProvider";
 import { categorias } from "@/data/categorias";
 import { avisoEstoqueSchema, type AvisoEstoqueFormData } from "@/lib/schemas";
-import type { ProdutoComImagens } from "@/types";
+import { CharmManiaBuilder } from "@/components/CharmManiaBuilder";
+import type { Charm, Produto, ProdutoComImagens, CharmManiaConfig } from "@/types";
 
 function AvisoEstoque({ produtoId }: { produtoId: string }) {
   const { user } = useAuth();
@@ -77,6 +78,8 @@ export function ProjectDetail() {
   const [quantidade, setQuantidade] = useState(1);
   const [corSelecionada, setCorSelecionada] = useState("");
   const [variacaoSelecionada, setVariacaoSelecionada] = useState("");
+  const [charms, setCharms] = useState<Charm[]>([]);
+  const [caixinha, setCaixinha] = useState<Produto | null>(null);
   const { items, addItem } = useCart();
   const { showToast } = useToast();
 
@@ -103,6 +106,18 @@ export function ProjectDetail() {
 
       const variacoes = produtoCarregado?.product_variations ?? [];
       setVariacaoSelecionada(variacoes[0]?.nome ?? "");
+
+      if (produtoCarregado?.categoria === "charm-mania") {
+        const [{ data: pingentes }, { data: caixinhaProduto }] = await Promise.all([
+          supabase.from("charms").select("*").order("nome", { ascending: true }),
+          supabase.from("products").select("*").eq("slug", "charm-mania-caixinha").maybeSingle(),
+        ]);
+        setCharms((pingentes as Charm[]) ?? []);
+        setCaixinha((caixinhaProduto as Produto) ?? null);
+      } else {
+        setCharms([]);
+        setCaixinha(null);
+      }
     })();
   }, [slug]);
 
@@ -112,6 +127,7 @@ export function ProjectDetail() {
         .from("products")
         .select("slug, nome")
         .eq("ativo", true)
+        .eq("exibir_catalogo", true)
         .order("created_at", { ascending: false });
       if (!data || data.length <= 1) {
         setProximo(null);
@@ -213,7 +229,7 @@ export function ProjectDetail() {
             </dl>
           </Reveal>
 
-          <Reveal className="max-w-xs mt-10">
+          <Reveal className={produto.categoria === "charm-mania" ? "max-w-2xl mt-10" : "max-w-xs mt-10"}>
             {(() => {
               const jaNoCarrinho = items
                 .filter((item) => item.productId === produto.id)
@@ -222,6 +238,23 @@ export function ProjectDetail() {
 
               if (produto.stock === 0) {
                 return <AvisoEstoque produtoId={produto.id} />;
+              }
+
+              if (produto.categoria === "charm-mania") {
+                if (restante === 0) {
+                  return <p className="text-navy/60">Todo o estoque disponível já está no seu carrinho.</p>;
+                }
+                return (
+                  <CharmManiaBuilder
+                    produto={produto}
+                    charms={charms}
+                    caixinha={caixinha}
+                    onAdicionar={(config: CharmManiaConfig, precoTotal: number) => {
+                      addItem(produto.id, 1, null, null, config, precoTotal);
+                      showToast({ title: "Adicionado ao carrinho", description: produto.nome, variant: "success" });
+                    }}
+                  />
+                );
               }
 
               if (restante === 0) {

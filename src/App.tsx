@@ -28,10 +28,12 @@ import { AdminProdutos } from "@/pages/admin/AdminProdutos";
 import { AdminProdutoForm } from "@/pages/admin/AdminProdutoForm";
 import { AdminProdutoImportar } from "@/pages/admin/AdminProdutoImportar";
 import { AdminCores } from "@/pages/admin/AdminCores";
+import { AdminPingentes } from "@/pages/admin/AdminPingentes";
 import { AdminPedidos } from "@/pages/admin/AdminPedidos";
 import { AdminBalanco } from "@/pages/admin/AdminBalanco";
 import { AdminDepoimentos } from "@/pages/admin/AdminDepoimentos";
 import { AdminGaleriaPersonalizados } from "@/pages/admin/AdminGaleriaPersonalizados";
+import { AdminGaleriaCharmMania } from "@/pages/admin/AdminGaleriaCharmMania";
 import { AdminVisitas } from "@/pages/admin/AdminVisitas";
 import { AdminUsuarios } from "@/pages/admin/AdminUsuarios";
 import { NotFound } from "@/pages/NotFound";
@@ -117,6 +119,14 @@ function App() {
               }
             />
             <Route
+              path="/admin/pingentes"
+              element={
+                <RequireAdmin>
+                  <AdminPingentes />
+                </RequireAdmin>
+              }
+            />
+            <Route
               path="/admin/pedidos"
               element={
                 <RequireAdmin>
@@ -145,6 +155,14 @@ function App() {
               element={
                 <RequireAdmin>
                   <AdminGaleriaPersonalizados />
+                </RequireAdmin>
+              }
+            />
+            <Route
+              path="/admin/galeria-charm-mania"
+              element={
+                <RequireAdmin>
+                  <AdminGaleriaCharmMania />
                 </RequireAdmin>
               }
             />

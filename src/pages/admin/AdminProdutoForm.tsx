@@ -47,11 +47,14 @@ export function AdminProdutoForm() {
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<ProdutoFormData>({
     resolver: zodResolver(produtoSchema),
     defaultValues: { ativo: true, stock: 0, destaque: false, categoria: "decoracao" },
   });
+
+  const categoriaSelecionada = watch("categoria");
 
   useEffect(() => {
     (async () => {
@@ -91,6 +94,8 @@ export function AdminProdutoForm() {
           stock: produto.stock,
           ativo: produto.ativo,
           tamanhoExibicao: produto.tamanho_exibicao ?? "",
+          valorLetra: produto.valor_letra ?? undefined,
+          limiteContas: produto.limite_contas ?? undefined,
         });
         setEstoqueOriginal(produto.stock);
       }
@@ -161,6 +166,8 @@ export function AdminProdutoForm() {
       stock: data.stock,
       ativo: data.ativo,
       tamanho_exibicao: data.tamanhoExibicao || null,
+      valor_letra: data.categoria === "charm-mania" ? data.valorLetra ?? null : null,
+      limite_contas: data.categoria === "charm-mania" ? data.limiteContas ?? null : null,
     };
 
     if (editando && id) {
@@ -183,7 +190,10 @@ export function AdminProdutoForm() {
       return;
     }
 
-    const slug = `${slugify(data.nome)}-${Date.now().toString(36)}`;
+    // A Charm Mania é uma peça única (não uma linha de produtos): slug fixo, usado pelo
+    // link da barra de navegação e pela aba de destaque no Portfólio.
+    const slug =
+      data.categoria === "charm-mania" ? "charm-mania" : `${slugify(data.nome)}-${Date.now().toString(36)}`;
     const { data: novo, error } = await supabase
       .from("products")
       .insert({ ...payload, slug })
@@ -355,6 +365,41 @@ export function AdminProdutoForm() {
               </Select>
               <FieldError message={errors.categoria?.message} />
             </div>
+
+            {categoriaSelecionada === "charm-mania" && (
+              <div className="rounded-xl border border-neutral-light bg-cream-light/60 px-5 py-5 space-y-4">
+                <p className="text-sm text-navy/70">
+                  Isto não é uma peça pronta — é a configuração da <strong>peça-base</strong> (cordão +
+                  ponteira) usada pelo montador que a cliente preenche no Portfólio. Nome e descrição
+                  aparecem no topo daquela página; preço, peso/dimensões e estoque abaixo são só da peça-base
+                  (a cliente nunca escolhe isso — ela escolhe letras e pingentes no montador, e o preço final
+                  é a soma de tudo). Só existe uma Charm Mania: depois de criada, você volta aqui pra
+                  ajustar os mesmos campos, sem precisar cadastrar de novo.
+                </p>
+                <div>
+                  <Label htmlFor="valorLetra">Valor por letra (R$)</Label>
+                  <Input id="valorLetra" type="number" step="0.01" min="0" {...register("valorLetra")} />
+                  <FieldError message={errors.valorLetra?.message} />
+                  <p className="text-xs text-navy/50 mt-2">
+                    Cobrado por cada letra que a cliente adicionar ao montar a peça. Pingentes têm preço
+                    próprio, gerenciado em{" "}
+                    <a href="/admin/pingentes" className="text-navy hover:text-magenta transition-colors">
+                      Pingentes
+                    </a>
+                    .
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="limiteContas">Limite de contas (letras + pingentes)</Label>
+                  <Input id="limiteContas" type="number" step="1" min="1" {...register("limiteContas")} />
+                  <FieldError message={errors.limiteContas?.message} />
+                  <p className="text-xs text-navy/50 mt-2">
+                    Máximo de contas (letras e pingentes somados) que cabem neste cordão. Deixe em branco
+                    para não limitar.
+                  </p>
+                </div>
+              </div>
+            )}
 
             <div>
               <p className="label-caps text-navy/70 mb-4">Peso e dimensões (obrigatórios)</p>

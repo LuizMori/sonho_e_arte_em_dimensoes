@@ -105,7 +105,10 @@ export function Checkout() {
     })
     .filter((linha): linha is { item: (typeof items)[number]; produto: Produto } => linha !== null);
 
-  const subtotal = linhas.reduce((total, { item, produto }) => total + produto.preco * item.quantidade, 0);
+  const precoLinha = (item: (typeof items)[number], produto: Produto) =>
+    item.charmMania && item.precoUnitario !== null ? item.precoUnitario : produto.preco;
+
+  const subtotal = linhas.reduce((total, { item, produto }) => total + precoLinha(item, produto) * item.quantidade, 0);
   const frete = opcaoSelecionada ? opcoes?.find((o) => o.id === opcaoSelecionada) : undefined;
   const total = subtotal + (frete?.valor ?? 0);
 
@@ -164,6 +167,9 @@ export function Checkout() {
             quantidade: item.quantidade,
             cor: item.cor,
             variacao: item.variacao,
+            personalizacao: item.charmMania
+              ? { sequencia: item.charmMania.sequencia, caixinha: item.charmMania.caixinha }
+              : null,
           })),
           cepDestino: cep.replace(/\D/g, ""),
           freteValor: frete.valor,
@@ -214,10 +220,14 @@ export function Checkout() {
           <form onSubmit={handleSubmit(finalizarPedido)} noValidate>
             <Reveal className="space-y-4 mb-14">
               {linhas.map(({ item, produto }) => {
-                const detalhe = [item.cor, item.variacao].filter(Boolean).join(" · ");
+                const detalhe = item.charmMania
+                  ? item.charmMania.sequencia
+                      .map((conta) => (conta.tipo === "letra" ? conta.valor.toUpperCase() : "Pingente"))
+                      .join(" · ") + (item.charmMania.caixinha ? " · Caixinha incluída" : "")
+                  : [item.cor, item.variacao].filter(Boolean).join(" · ");
                 return (
                   <div
-                    key={`${produto.id}-${item.cor ?? ""}-${item.variacao ?? ""}`}
+                    key={`${produto.id}-${item.cor ?? ""}-${item.variacao ?? ""}-${item.charmMania?.configId ?? ""}`}
                     className="flex items-center justify-between border-b border-neutral-light pb-4"
                   >
                     <p className="text-navy">
@@ -225,7 +235,7 @@ export function Checkout() {
                       {detalhe && <span className="text-navy/50"> ({detalhe})</span>}{" "}
                       <span className="text-navy/50">× {item.quantidade}</span>
                     </p>
-                    <p className="text-navy">{formatarMoeda(produto.preco * item.quantidade)}</p>
+                    <p className="text-navy">{formatarMoeda(precoLinha(item, produto) * item.quantidade)}</p>
                   </div>
                 );
               })}

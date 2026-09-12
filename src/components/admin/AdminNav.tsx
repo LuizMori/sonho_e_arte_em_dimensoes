@@ -4,10 +4,12 @@ import { cn } from "@/lib/utils";
 const links = [
   { to: "/admin/produtos", label: "Produtos" },
   { to: "/admin/cores", label: "Cores" },
+  { to: "/admin/pingentes", label: "Pingentes" },
   { to: "/admin/pedidos", label: "Pedidos" },
   { to: "/admin/balanco", label: "Balanço" },
   { to: "/admin/depoimentos", label: "Depoimentos" },
   { to: "/admin/galeria-personalizados", label: "Galeria personalizados" },
+  { to: "/admin/galeria-charm-mania", label: "Galeria Charm Mania" },
   { to: "/admin/visitas", label: "Visitas" },
   { to: "/admin/usuarios", label: "Usuários" },
 ];

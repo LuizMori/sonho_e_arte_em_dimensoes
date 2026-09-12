@@ -132,13 +132,41 @@ export function Pedido() {
           {itens.map((item) => {
             const detalhe = [item.cor, item.variacao].filter(Boolean).join(" · ");
             return (
-              <div key={item.id} className="flex items-center justify-between border-b border-neutral-light pb-4">
-                <p className="text-navy">
-                  {item.products?.nome ?? item.nome_produto ?? "Produto"}
-                  {detalhe && <span className="text-navy/50"> ({detalhe})</span>}{" "}
-                  <span className="text-navy/50">× {item.quantidade}</span>
-                </p>
-                <p className="text-navy">{formatarMoeda(item.preco_unitario * item.quantidade)}</p>
+              <div key={item.id} className="border-b border-neutral-light pb-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-navy">
+                    {item.products?.nome ?? item.nome_produto ?? "Produto"}
+                    {detalhe && <span className="text-navy/50"> ({detalhe})</span>}{" "}
+                    <span className="text-navy/50">× {item.quantidade}</span>
+                  </p>
+                  <p className="text-navy">{formatarMoeda(item.preco_unitario * item.quantidade)}</p>
+                </div>
+                {item.personalizacao && (
+                  <div className="mt-2 text-sm text-navy/60 space-y-1">
+                    <p>
+                      Palavra:{" "}
+                      {item.personalizacao.sequencia
+                        .filter((c) => c.tipo === "letra")
+                        .map((c) => c.valor.toUpperCase())
+                        .join("") || "—"}
+                    </p>
+                    {item.personalizacao.sequencia.some((c) => c.tipo === "pingente") && (
+                      <p>
+                        Pingentes:{" "}
+                        {item.personalizacao.sequencia
+                          .filter((c): c is Extract<typeof c, { tipo: "pingente" }> => c.tipo === "pingente")
+                          .map((c) => `${c.nome} (${formatarMoeda(c.preco)})`)
+                          .join(", ")}
+                      </p>
+                    )}
+                    <p>
+                      Caixinha:{" "}
+                      {item.personalizacao.caixinha.incluida
+                        ? `Sim (${formatarMoeda(item.personalizacao.caixinha.preco)})`
+                        : "Não"}
+                    </p>
+                  </div>
+                )}
               </div>
             );
           })}

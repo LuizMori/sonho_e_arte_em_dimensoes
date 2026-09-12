@@ -1,11 +1,14 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
 
+type Bead = { tipo: "letra"; valor: string } | { tipo: "pingente"; charmId: string };
+
 interface CreateOrderItemPayload {
   productId: string;
   quantidade: number;
   cor?: string | null;
   variacao?: string | null;
+  personalizacao?: { sequencia: Bead[]; caixinha: boolean } | null;
 }
 
 interface EnderecoPayload {
@@ -81,6 +84,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         quantidade: item.quantidade,
         cor: item.cor ?? null,
         variacao: item.variacao ?? null,
+        personalizacao: item.personalizacao ?? null,
       })),
       p_cep_destino: cepDestino,
       p_frete_valor: freteValor,

@@ -98,6 +98,7 @@ export function AdminPedidos() {
                     </td>
                     <td className="py-4 pr-4 text-navy/80">
                       {pedido.order_items
+                        .filter((item) => !item.personalizacao)
                         .map((item) => {
                           const detalhe = [item.cor, item.variacao].filter(Boolean).join(" · ");
                           return `${item.quantidade}× ${item.products?.nome ?? item.nome_produto ?? "Produto removido"}${
@@ -105,6 +106,26 @@ export function AdminPedidos() {
                           }`;
                         })
                         .join(", ")}
+                      {pedido.order_items
+                        .filter((item) => item.personalizacao)
+                        .map((item) => {
+                          const palavra = item.personalizacao!.sequencia
+                            .filter((c) => c.tipo === "letra")
+                            .map((c) => c.valor.toUpperCase())
+                            .join("");
+                          const pingentes = item.personalizacao!.sequencia
+                            .filter((c): c is Extract<typeof c, { tipo: "pingente" }> => c.tipo === "pingente")
+                            .map((c) => c.nome)
+                            .join(", ");
+                          return (
+                            <div key={item.id} className="mt-1">
+                              {item.quantidade}× {item.products?.nome ?? item.nome_produto ?? "Charm Mania"}
+                              {palavra && ` — "${palavra}"`}
+                              {pingentes && ` + ${pingentes}`}
+                              {item.personalizacao!.caixinha.incluida && " + Caixinha"}
+                            </div>
+                          );
+                        })}
                     </td>
                     <td className="py-4 pr-4 text-navy whitespace-nowrap">{formatarMoeda(pedido.total)}</td>
                     <td className={`py-4 pr-4 whitespace-nowrap ${statusCor[pedido.status]}`}>

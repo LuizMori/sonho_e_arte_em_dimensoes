@@ -6,7 +6,8 @@ export type CategoriaSlug =
   | "geek"
   | "presentes"
   | "sazonais"
-  | "utilidades";
+  | "utilidades"
+  | "charm-mania";
 
 export interface Categoria {
   slug: string;
@@ -95,6 +96,9 @@ export interface Produto {
   categoria: CategoriaSlug;
   destaque: boolean;
   tamanho_exibicao: string | null;
+  exibir_catalogo: boolean;
+  valor_letra: number | null;
+  limite_contas: number | null;
   slug: string;
   created_at: string;
   updated_at: string;
@@ -104,6 +108,36 @@ export interface ProdutoComImagens extends Produto {
   product_images: ProdutoImagemDb[];
   product_colors?: ProdutoCorDb[];
   product_variations?: ProdutoVariacaoDb[];
+}
+
+export interface Charm {
+  id: string;
+  nome: string;
+  preco: number;
+  estoque: number;
+  imagem_url: string | null;
+  created_at: string;
+}
+
+// Uma "conta" do cordão da Charm Mania, na ordem em que a cliente montou.
+export type Bead = { tipo: "letra"; valor: string } | { tipo: "pingente"; charmId: string };
+
+export interface CharmManiaConfig {
+  configId: string;
+  sequencia: Bead[];
+  caixinha: boolean;
+}
+
+// Conta de pingente já resolvida (nome/preço), como fica gravada no snapshot do pedido.
+export type BeadResolvido =
+  | { tipo: "letra"; valor: string }
+  | { tipo: "pingente"; charmId: string; nome: string; preco: number };
+
+export interface PersonalizacaoSnapshot {
+  sequencia: BeadResolvido[];
+  caixinha: { incluida: false } | { incluida: true; nome: string; preco: number };
+  valor_base: number | null;
+  total: number;
 }
 
 export type OrderStatus = "pending_payment" | "paid" | "shipped" | "cancelled" | "expired";
@@ -143,6 +177,7 @@ export interface OrderItemDb {
   nome_produto: string | null;
   cor: string | null;
   variacao: string | null;
+  personalizacao: PersonalizacaoSnapshot | null;
   created_at: string;
 }
 
@@ -184,6 +219,14 @@ export interface Testimonial {
 }
 
 export interface CustomGalleryItem {
+  id: string;
+  imagem_url: string;
+  descricao: string | null;
+  ordem: number;
+  created_at: string;
+}
+
+export interface CharmManiaGalleryItem {
   id: string;
   imagem_url: string;
   descricao: string | null;
