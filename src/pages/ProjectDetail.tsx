@@ -14,7 +14,9 @@ import { useAuth } from "@/lib/AuthProvider";
 import { categorias } from "@/data/categorias";
 import { avisoEstoqueSchema, type AvisoEstoqueFormData } from "@/lib/schemas";
 import { CharmManiaBuilder } from "@/components/CharmManiaBuilder";
-import type { Charm, Produto, ProdutoComImagens, CharmManiaConfig } from "@/types";
+import type { Charm, Color, Produto, ProdutoComImagens, ProdutoCorDb, CharmManiaConfig } from "@/types";
+
+type CaixinhaComCores = Produto & { product_colors?: ProdutoCorDb[] };
 
 function AvisoEstoque({ produtoId }: { produtoId: string }) {
   const { user } = useAuth();
@@ -79,7 +81,8 @@ export function ProjectDetail() {
   const [corSelecionada, setCorSelecionada] = useState("");
   const [variacaoSelecionada, setVariacaoSelecionada] = useState("");
   const [charms, setCharms] = useState<Charm[]>([]);
-  const [caixinha, setCaixinha] = useState<Produto | null>(null);
+  const [caixinha, setCaixinha] = useState<CaixinhaComCores | null>(null);
+  const [coresLetra, setCoresLetra] = useState<Color[]>([]);
   const { items, addItem } = useCart();
   const { showToast } = useToast();
 
@@ -89,7 +92,7 @@ export function ProjectDetail() {
       const { data } = await supabase
         .from("products")
         .select(
-          "*, product_images(*), product_colors(color_id, colors(id, nome)), product_variations(id, nome, ordem)"
+          "*, product_images(*), product_colors(color_id, colors(id, nome, hex)), product_variations(id, nome, ordem)"
         )
         .eq("slug", slug)
         .eq("ativo", true)
@@ -108,14 +111,28 @@ export function ProjectDetail() {
       setVariacaoSelecionada(variacoes[0]?.nome ?? "");
 
       if (produtoCarregado?.categoria === "charm-mania") {
-        const [{ data: pingentes }, { data: caixinhaProduto }] = await Promise.all([
+        const [{ data: pingentes }, { data: caixinhaProduto }, { data: coresLetraDb }] = await Promise.all([
           supabase.from("charms").select("*").order("nome", { ascending: true }),
-          supabase.from("products").select("*").eq("slug", "charm-mania-caixinha").maybeSingle(),
+          supabase
+            .from("products")
+            .select("*, product_colors(color_id, colors(id, nome, hex))")
+            .eq("slug", "charm-mania-caixinha")
+            .maybeSingle(),
+          supabase
+            .from("charm_mania_letter_colors")
+            .select("color_id, colors(id, nome, hex)")
+            .eq("product_id", produtoCarregado.id),
         ]);
         setCharms((pingentes as Charm[]) ?? []);
-        setCaixinha((caixinhaProduto as Produto) ?? null);
+        setCaixinha((caixinhaProduto as CaixinhaComCores) ?? null);
+        setCoresLetra(
+          ((coresLetraDb as unknown as ProdutoCorDb[]) ?? [])
+            .map((c) => c.colors)
+            .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))
+        );
       } else {
         setCharms([]);
+        setCoresLetra([]);
         setCaixinha(null);
       }
     })();
@@ -249,6 +266,7 @@ export function ProjectDetail() {
                     produto={produto}
                     charms={charms}
                     caixinha={caixinha}
+                    coresLetraDisponiveis={coresLetra}
                     onAdicionar={(config: CharmManiaConfig, precoTotal: number) => {
                       addItem(produto.id, 1, null, null, config, precoTotal);
                       showToast({ title: "Adicionado ao carrinho", description: produto.nome, variant: "success" });

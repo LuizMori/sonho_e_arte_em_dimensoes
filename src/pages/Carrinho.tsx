@@ -62,8 +62,11 @@ export function Carrinho() {
     const partes = item.charmMania.sequencia.map((conta) =>
       conta.tipo === "letra" ? conta.valor.toUpperCase() : charms.find((c) => c.id === conta.charmId)?.nome ?? "Pingente"
     );
-    const texto = partes.join(" · ") || "Sem personalização";
-    return item.charmMania.caixinha ? `${texto} · Caixinha incluída` : texto;
+    const cordao = item.charmMania.cordaoCor ? `Cordão ${item.charmMania.cordaoCor}` : null;
+    const texto = [cordao, partes.join(" · ") || "Sem personalização"].filter(Boolean).join(" · ");
+    if (!item.charmMania.caixinha) return texto;
+    const corCaixinha = item.charmMania.caixinhaCor ? ` (${item.charmMania.caixinhaCor})` : "";
+    return `${texto} · Caixinha incluída${corCaixinha}`;
   };
 
   return (
@@ -94,13 +97,23 @@ export function Carrinho() {
                     key={`${produto.id}-${item.cor ?? ""}-${item.variacao ?? ""}-${item.charmMania?.configId ?? ""}`}
                     className="flex gap-6 items-center border-b border-neutral-light pb-8"
                   >
-                    <Link to={`/portfolio/${produto.slug}`} className="shrink-0 w-24 h-24 bg-neutral-light/40 overflow-hidden">
-                      {capa && <img src={capa.url} alt={capa.alt || produto.nome} className="w-full h-full object-cover" />}
-                    </Link>
-                    <div className="flex-1 min-w-0">
-                      <Link to={`/portfolio/${produto.slug}`} className="font-display text-xl text-navy hover:text-magenta transition-colors">
-                        {produto.nome}
+                    {item.charmMania ? (
+                      <div className="shrink-0 w-24 h-24 bg-neutral-light/40 overflow-hidden">
+                        {capa && <img src={capa.url} alt={capa.alt || produto.nome} className="w-full h-full object-cover" />}
+                      </div>
+                    ) : (
+                      <Link to={`/portfolio/${produto.slug}`} className="shrink-0 w-24 h-24 bg-neutral-light/40 overflow-hidden">
+                        {capa && <img src={capa.url} alt={capa.alt || produto.nome} className="w-full h-full object-cover" />}
                       </Link>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      {item.charmMania ? (
+                        <span className="font-display text-xl text-navy">{produto.nome}</span>
+                      ) : (
+                        <Link to={`/portfolio/${produto.slug}`} className="font-display text-xl text-navy hover:text-magenta transition-colors">
+                          {produto.nome}
+                        </Link>
+                      )}
                       {item.charmMania ? (
                         <p className="text-navy/50 text-sm mt-1">{resumoCharmMania(item)}</p>
                       ) : (

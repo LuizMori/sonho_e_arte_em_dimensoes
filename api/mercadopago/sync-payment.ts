@@ -8,6 +8,58 @@ interface SyncPaymentPayload {
 
 const formatarMoeda = (valor: number) => valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+interface OrderItemParaEmail {
+  quantidade: number;
+  preco_unitario: number;
+  cor?: string | null;
+  variacao?: string | null;
+  products?: { nome: string } | null;
+  nome_produto?: string | null;
+  personalizacao?: {
+    sequencia: ({ tipo: "letra"; valor: string; cor?: string | null } | { tipo: "pingente"; nome: string; preco: number })[];
+    cordao_cor?: string | null;
+    caixinha: { incluida: false } | { incluida: true; nome: string; preco: number; cor: string | null };
+  } | null;
+}
+
+// Descreve um item do pedido para o e-mail do vendedor — sem isso, um pedido de Charm
+// Mania chegava pra quem monta a peça sem dizer a palavra, os pingentes ou as cores
+// escolhidas (informação que só aparecia pro cliente, nunca pra quem produz).
+function descreverItem(item: OrderItemParaEmail): string {
+  const nome = item.products?.nome ?? item.nome_produto ?? "Produto";
+  const base = `${item.quantidade}x ${nome} — ${formatarMoeda(item.preco_unitario * item.quantidade)}`;
+
+  if (item.personalizacao) {
+    const letras = item.personalizacao.sequencia.filter(
+      (c): c is { tipo: "letra"; valor: string; cor?: string | null } => c.tipo === "letra"
+    );
+    // Cor por letra, não só a lista de cores usadas na peça — quem monta precisa saber
+    // exatamente qual letra fica em qual cor, não só "usei rosa e roxo em algum lugar".
+    const palavraComCores = letras
+      .map((c) => (c.cor ? `${c.valor.toUpperCase()}(${c.cor})` : c.valor.toUpperCase()))
+      .join(" ");
+    const pingentes = item.personalizacao.sequencia
+      .filter((c): c is { tipo: "pingente"; nome: string; preco: number } => c.tipo === "pingente")
+      .map((c) => c.nome);
+
+    const detalhes = [
+      item.personalizacao.cordao_cor ? `cordão ${item.personalizacao.cordao_cor}` : null,
+      palavraComCores ? `palavra: ${palavraComCores}` : null,
+      pingentes.length > 0 ? `pingentes: ${pingentes.join(", ")}` : null,
+      item.personalizacao.caixinha.incluida
+        ? `caixinha${item.personalizacao.caixinha.cor ? ` (${item.personalizacao.caixinha.cor})` : ""}`
+        : null,
+    ].filter(Boolean);
+
+    return detalhes.length > 0 ? `${base}\n     ${detalhes.join(" · ")}` : base;
+  }
+
+  const detalheSimples = [item.cor && `cor ${item.cor}`, item.variacao && `variação ${item.variacao}`]
+    .filter(Boolean)
+    .join(" · ");
+  return detalheSimples ? `${base} (${detalheSimples})` : base;
+}
+
 async function notificarAdminPedidoPago(supabase: SupabaseClient, orderId: string) {
   const apiKey = process.env.RESEND_API_KEY;
   const destinatario = process.env.CONTACT_EMAIL;
@@ -31,10 +83,7 @@ async function notificarAdminPedidoPago(supabase: SupabaseClient, orderId: strin
     `Telefone: ${pedido.telefone ?? "Não informado"}`,
     "",
     "Produtos:",
-    ...pedido.order_items.map(
-      (item: { quantidade: number; preco_unitario: number; products?: { nome: string } | null; nome_produto?: string | null }) =>
-        `  ${item.quantidade}x ${item.products?.nome ?? item.nome_produto ?? "Produto"} — ${formatarMoeda(item.preco_unitario * item.quantidade)}`
-    ),
+    ...pedido.order_items.map((item: OrderItemParaEmail) => `  ${descreverItem(item)}`),
     "",
     `Subtotal: ${formatarMoeda(pedido.subtotal)}`,
     `Frete: ${formatarMoeda(pedido.frete_valor)}`,

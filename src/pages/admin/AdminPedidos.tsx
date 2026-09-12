@@ -109,10 +109,12 @@ export function AdminPedidos() {
                       {pedido.order_items
                         .filter((item) => item.personalizacao)
                         .map((item) => {
-                          const palavra = item.personalizacao!.sequencia
-                            .filter((c) => c.tipo === "letra")
-                            .map((c) => c.valor.toUpperCase())
-                            .join("");
+                          const letras = item.personalizacao!.sequencia.filter(
+                            (c): c is Extract<typeof c, { tipo: "letra" }> => c.tipo === "letra"
+                          );
+                          const palavraComCores = letras
+                            .map((c) => (c.cor ? `${c.valor.toUpperCase()}(${c.cor})` : c.valor.toUpperCase()))
+                            .join(" ");
                           const pingentes = item.personalizacao!.sequencia
                             .filter((c): c is Extract<typeof c, { tipo: "pingente" }> => c.tipo === "pingente")
                             .map((c) => c.nome)
@@ -120,9 +122,13 @@ export function AdminPedidos() {
                           return (
                             <div key={item.id} className="mt-1">
                               {item.quantidade}× {item.products?.nome ?? item.nome_produto ?? "Charm Mania"}
-                              {palavra && ` — "${palavra}"`}
+                              {item.personalizacao!.cordao_cor && ` — cordão ${item.personalizacao!.cordao_cor}`}
+                              {palavraComCores && ` — ${palavraComCores}`}
                               {pingentes && ` + ${pingentes}`}
-                              {item.personalizacao!.caixinha.incluida && " + Caixinha"}
+                              {item.personalizacao!.caixinha.incluida &&
+                                ` + Caixinha${
+                                  item.personalizacao!.caixinha.cor ? ` (${item.personalizacao!.caixinha.cor})` : ""
+                                }`}
                             </div>
                           );
                         })}

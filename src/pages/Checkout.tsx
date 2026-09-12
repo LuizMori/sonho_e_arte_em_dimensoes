@@ -168,7 +168,12 @@ export function Checkout() {
             cor: item.cor,
             variacao: item.variacao,
             personalizacao: item.charmMania
-              ? { sequencia: item.charmMania.sequencia, caixinha: item.charmMania.caixinha }
+              ? {
+                  sequencia: item.charmMania.sequencia,
+                  cordaoCor: item.charmMania.cordaoCor,
+                  caixinha: item.charmMania.caixinha,
+                  caixinhaCor: item.charmMania.caixinhaCor,
+                }
               : null,
           })),
           cepDestino: cep.replace(/\D/g, ""),
@@ -221,9 +226,17 @@ export function Checkout() {
             <Reveal className="space-y-4 mb-14">
               {linhas.map(({ item, produto }) => {
                 const detalhe = item.charmMania
-                  ? item.charmMania.sequencia
-                      .map((conta) => (conta.tipo === "letra" ? conta.valor.toUpperCase() : "Pingente"))
-                      .join(" · ") + (item.charmMania.caixinha ? " · Caixinha incluída" : "")
+                  ? [
+                      item.charmMania.cordaoCor ? `Cordão ${item.charmMania.cordaoCor}` : null,
+                      ...item.charmMania.sequencia.map((conta) =>
+                        conta.tipo === "letra" ? conta.valor.toUpperCase() : "Pingente"
+                      ),
+                      item.charmMania.caixinha
+                        ? `Caixinha incluída${item.charmMania.caixinhaCor ? ` (${item.charmMania.caixinhaCor})` : ""}`
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")
                   : [item.cor, item.variacao].filter(Boolean).join(" · ");
                 return (
                   <div

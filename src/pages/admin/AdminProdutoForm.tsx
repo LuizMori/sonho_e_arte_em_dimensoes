@@ -40,6 +40,7 @@ export function AdminProdutoForm() {
   const [avisosPendentes, setAvisosPendentes] = useState<number | null>(null);
   const [paletaCores, setPaletaCores] = useState<Color[]>([]);
   const [coresSelecionadas, setCoresSelecionadas] = useState<string[]>([]);
+  const [coresLetraSelecionadas, setCoresLetraSelecionadas] = useState<string[]>([]);
   const [variacoesTexto, setVariacoesTexto] = useState("");
 
   const {
@@ -67,7 +68,7 @@ export function AdminProdutoForm() {
     if (!id) return;
 
     (async () => {
-      const [{ data: produto }, { data: imgs }, { count: pendentes }, { data: cores }, { data: variacoes }] =
+      const [{ data: produto }, { data: imgs }, { count: pendentes }, { data: cores }, { data: coresLetra }, { data: variacoes }] =
         await Promise.all([
           supabase.from("products").select("*").eq("id", id).single(),
           supabase.from("product_images").select("*").eq("product_id", id).order("ordem"),
@@ -77,6 +78,7 @@ export function AdminProdutoForm() {
             .eq("product_id", id)
             .eq("notificado", false),
           supabase.from("product_colors").select("color_id").eq("product_id", id),
+          supabase.from("charm_mania_letter_colors").select("color_id").eq("product_id", id),
           supabase.from("product_variations").select("nome").eq("product_id", id).order("ordem"),
         ]);
 
@@ -102,6 +104,7 @@ export function AdminProdutoForm() {
       setImagens(imgs ?? []);
       setAvisosPendentes(pendentes ?? 0);
       setCoresSelecionadas((cores ?? []).map((c) => c.color_id));
+      setCoresLetraSelecionadas((coresLetra ?? []).map((c) => c.color_id));
       setVariacoesTexto((variacoes ?? []).map((v) => v.nome).join("; "));
       setCarregando(false);
     })();
@@ -109,6 +112,12 @@ export function AdminProdutoForm() {
 
   const alternarCor = (colorId: string) => {
     setCoresSelecionadas((prev) =>
+      prev.includes(colorId) ? prev.filter((c) => c !== colorId) : [...prev, colorId]
+    );
+  };
+
+  const alternarCorLetra = (colorId: string) => {
+    setCoresLetraSelecionadas((prev) =>
       prev.includes(colorId) ? prev.filter((c) => c !== colorId) : [...prev, colorId]
     );
   };
@@ -135,6 +144,14 @@ export function AdminProdutoForm() {
     await supabase
       .from("product_colors")
       .insert(coresSelecionadas.map((colorId) => ({ product_id: produtoId, color_id: colorId })));
+  };
+
+  const salvarCoresLetra = async (produtoId: string) => {
+    await supabase.from("charm_mania_letter_colors").delete().eq("product_id", produtoId);
+    if (coresLetraSelecionadas.length === 0) return;
+    await supabase
+      .from("charm_mania_letter_colors")
+      .insert(coresLetraSelecionadas.map((colorId) => ({ product_id: produtoId, color_id: colorId })));
   };
 
   const salvarVariacoes = async (produtoId: string) => {
@@ -184,6 +201,7 @@ export function AdminProdutoForm() {
       }
 
       await salvarCores(id);
+      await salvarCoresLetra(id);
       await salvarVariacoes(id);
 
       showToast({ title: "Produto atualizado", variant: "success" });
@@ -212,6 +230,7 @@ export function AdminProdutoForm() {
     }
 
     await salvarCores(novo.id);
+    await salvarCoresLetra(novo.id);
     await salvarVariacoes(novo.id);
 
     showToast({ title: "Produto criado", description: "Agora adicione as fotos.", variant: "success" });
@@ -307,7 +326,14 @@ export function AdminProdutoForm() {
             </div>
 
             <div>
-              <p className="label-caps text-navy/70 mb-2">Cores disponíveis (opcional)</p>
+              <p className="label-caps text-navy/70 mb-2">
+                {categoriaSelecionada === "charm-mania" ? "Cor do cordão (opcional)" : "Cores disponíveis (opcional)"}
+              </p>
+              {categoriaSelecionada === "charm-mania" && (
+                <p className="text-xs text-navy/50 mb-2">
+                  A cliente escolhe uma cor de cordão no montador, dentre as marcadas aqui.
+                </p>
+              )}
               {paletaCores.length === 0 ? (
                 <p className="text-sm text-navy/50 mt-2">
                   Nenhuma cor cadastrada ainda. Gerencie a paleta em{" "}
@@ -397,6 +423,42 @@ export function AdminProdutoForm() {
                     Máximo de contas (letras e pingentes somados) que cabem neste cordão. Deixe em branco
                     para não limitar.
                   </p>
+                </div>
+                <div>
+                  <p className="label-caps text-navy/70 mb-2">Cores das letras (opcional)</p>
+                  <p className="text-xs text-navy/50 mb-3">
+                    Cores de filamento disponíveis para as letras. No montador, a cliente pode usar no
+                    máximo 2 dessas cores na mesma peça.
+                  </p>
+                  {paletaCores.length === 0 ? (
+                    <p className="text-sm text-navy/50">
+                      Nenhuma cor cadastrada ainda. Gerencie a paleta em{" "}
+                      <a href="/admin/cores" className="text-navy hover:text-magenta transition-colors">
+                        Cores
+                      </a>
+                      .
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-3">
+                      {paletaCores.map((cor) => {
+                        const selecionada = coresLetraSelecionadas.includes(cor.id);
+                        return (
+                          <button
+                            key={cor.id}
+                            type="button"
+                            onClick={() => alternarCorLetra(cor.id)}
+                            className={`label-caps rounded-full border px-4 py-2 transition-colors ${
+                              selecionada
+                                ? "border-magenta text-magenta"
+                                : "border-neutral-light text-navy/70 hover:border-magenta hover:text-magenta"
+                            }`}
+                          >
+                            {cor.nome}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             )}

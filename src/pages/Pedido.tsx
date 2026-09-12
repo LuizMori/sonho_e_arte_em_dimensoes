@@ -143,12 +143,18 @@ export function Pedido() {
                 </div>
                 {item.personalizacao && (
                   <div className="mt-2 text-sm text-navy/60 space-y-1">
+                    {item.personalizacao.cordao_cor && <p>Cordão: {item.personalizacao.cordao_cor}</p>}
                     <p>
                       Palavra:{" "}
-                      {item.personalizacao.sequencia
-                        .filter((c) => c.tipo === "letra")
-                        .map((c) => c.valor.toUpperCase())
-                        .join("") || "—"}
+                      {(() => {
+                        const letras = item.personalizacao.sequencia.filter(
+                          (c): c is Extract<typeof c, { tipo: "letra" }> => c.tipo === "letra"
+                        );
+                        if (letras.length === 0) return "—";
+                        return letras
+                          .map((c) => (c.cor ? `${c.valor.toUpperCase()}(${c.cor})` : c.valor.toUpperCase()))
+                          .join(" ");
+                      })()}
                     </p>
                     {item.personalizacao.sequencia.some((c) => c.tipo === "pingente") && (
                       <p>
@@ -162,7 +168,9 @@ export function Pedido() {
                     <p>
                       Caixinha:{" "}
                       {item.personalizacao.caixinha.incluida
-                        ? `Sim (${formatarMoeda(item.personalizacao.caixinha.preco)})`
+                        ? `Sim (${formatarMoeda(item.personalizacao.caixinha.preco)}${
+                            item.personalizacao.caixinha.cor ? ` — ${item.personalizacao.caixinha.cor}` : ""
+                          })`
                         : "Não"}
                     </p>
                   </div>

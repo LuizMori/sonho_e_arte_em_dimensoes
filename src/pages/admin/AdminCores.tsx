@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { Reveal } from "@/components/Reveal";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { SeletorCorPaleta, PALETA_HEX } from "@/components/admin/SeletorCorPaleta";
 import { Input, Label } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
@@ -16,6 +17,7 @@ export function AdminCores() {
   const [cores, setCores] = useState<Color[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [nomeNovaCor, setNomeNovaCor] = useState("");
+  const [hexNovaCor, setHexNovaCor] = useState<string>(PALETA_HEX[0].hex);
   const [salvando, setSalvando] = useState(false);
 
   const carregar = async () => {
@@ -35,7 +37,7 @@ export function AdminCores() {
     if (!nome) return;
 
     setSalvando(true);
-    const { error } = await supabase.from("colors").insert({ nome });
+    const { error } = await supabase.from("colors").insert({ nome, hex: hexNovaCor });
     setSalvando(false);
 
     if (error) {
@@ -47,6 +49,24 @@ export function AdminCores() {
     setNomeNovaCor("");
     showToast({ title: "Cor adicionada", variant: "success" });
     carregar();
+  };
+
+  const atualizarHex = async (cor: Color, hex: string) => {
+    const hexAnterior = cor.hex;
+    setCores((prev) => prev.map((c) => (c.id === cor.id ? { ...c, hex } : c)));
+
+    // .select() depois do update é o que permite perceber um bloqueio de RLS: sem
+    // permissão, o update roda "com sucesso" mas não afeta nenhuma linha (error fica nulo,
+    // data vem vazio) — só assim dá pra distinguir de um update que realmente funcionou.
+    const { data, error } = await supabase.from("colors").update({ hex }).eq("id", cor.id).select().maybeSingle();
+    if (error || !data) {
+      setCores((prev) => prev.map((c) => (c.id === cor.id ? { ...c, hex: hexAnterior } : c)));
+      showToast({
+        title: "Não foi possível salvar a cor",
+        description: error?.message,
+        variant: "error",
+      });
+    }
   };
 
   const removerCor = async (cor: Color) => {
@@ -93,6 +113,12 @@ export function AdminCores() {
                 placeholder="Ex: Verde-água"
               />
             </div>
+            <div>
+              <Label htmlFor="hexNovaCor">Cor</Label>
+              <div className="h-11 flex items-center">
+                <SeletorCorPaleta value={hexNovaCor} onChange={setHexNovaCor} />
+              </div>
+            </div>
             <Button type="submit" disabled={!nomeNovaCor.trim() || salvando}>
               {salvando ? "Adicionando..." : "Adicionar"}
             </Button>
@@ -110,7 +136,10 @@ export function AdminCores() {
                 key={cor.id}
                 className="flex items-center justify-between border-b border-neutral-light/60 pb-3"
               >
-                <span className="text-navy">{cor.nome}</span>
+                <div className="flex items-center gap-3">
+                  <SeletorCorPaleta value={cor.hex} onChange={(hex) => atualizarHex(cor, hex)} />
+                  <span className="text-navy">{cor.nome}</span>
+                </div>
                 <button
                   type="button"
                   onClick={() => removerCor(cor)}
