@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
+import { Link } from "react-router-dom";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { Reveal } from "@/components/Reveal";
 import { AdminNav } from "@/components/admin/AdminNav";
@@ -8,6 +9,8 @@ import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { supabase } from "@/lib/supabaseClient";
 import { uploadCharmImage } from "@/lib/storage";
+import { baixarCsv } from "@/lib/csv";
+import { COLUNAS_PINGENTE_CSV } from "@/data/charmCsvColunas";
 import type { Charm, Color } from "@/types";
 
 const formatarMoeda = (valor: number) => valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -115,6 +118,17 @@ export function AdminPingentes() {
     }
   };
 
+  const exportarCsv = () => {
+    const linhas = pingentes.map((p) => [
+      p.nome,
+      String(p.preco),
+      String(p.estoque),
+      "",
+      (p.charm_colors ?? []).map((cc) => cc.colors.nome).join(";"),
+    ]);
+    baixarCsv("pingentes.csv", [...COLUNAS_PINGENTE_CSV], linhas);
+  };
+
   const atualizarCampo = async (pingente: Charm, campo: "preco" | "estoque", valor: number) => {
     if (Number.isNaN(valor) || valor < 0) return;
     await supabase.from("charms").update({ [campo]: valor }).eq("id", pingente.id);
@@ -140,14 +154,26 @@ export function AdminPingentes() {
   return (
     <section className="pt-40 pb-24 md:pt-48 md:pb-32">
       <div className="container max-w-2xl">
-        <Reveal className="mb-12">
-          <p className="label-caps text-magenta mb-6">Painel admin</p>
-          <h1 className="font-display text-5xl sm:text-6xl tracking-tightest text-navy leading-[1.05]">
-            Pingentes
-          </h1>
-          <p className="text-sm text-navy/50 mt-4">
-            Catálogo de pingentes usado no montador da Charm Mania, com preço e estoque próprios de cada um.
-          </p>
+        <Reveal className="flex flex-wrap items-start justify-between gap-6 mb-12">
+          <div>
+            <p className="label-caps text-magenta mb-6">Painel admin</p>
+            <h1 className="font-display text-5xl sm:text-6xl tracking-tightest text-navy leading-[1.05]">
+              Pingentes
+            </h1>
+            <p className="text-sm text-navy/50 mt-4">
+              Catálogo de pingentes usado no montador da Charm Mania, com preço e estoque próprios de cada um.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-4">
+            {pingentes.length > 0 && (
+              <Button type="button" variant="outline" onClick={exportarCsv}>
+                Exportar CSV
+              </Button>
+            )}
+            <Link to="/admin/pingentes/importar">
+              <Button variant="outline">Importar CSV</Button>
+            </Link>
+          </div>
         </Reveal>
 
         <AdminNav />

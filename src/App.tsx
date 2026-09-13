@@ -29,6 +29,7 @@ import { AdminProdutoForm } from "@/pages/admin/AdminProdutoForm";
 import { AdminProdutoImportar } from "@/pages/admin/AdminProdutoImportar";
 import { AdminCores } from "@/pages/admin/AdminCores";
 import { AdminPingentes } from "@/pages/admin/AdminPingentes";
+import { AdminPingentesImportar } from "@/pages/admin/AdminPingentesImportar";
 import { AdminPedidos } from "@/pages/admin/AdminPedidos";
 import { AdminBalanco } from "@/pages/admin/AdminBalanco";
 import { AdminDepoimentos } from "@/pages/admin/AdminDepoimentos";
@@ -123,6 +124,14 @@ function App() {
               element={
                 <RequireAdmin>
                   <AdminPingentes />
+                </RequireAdmin>
+              }
+            />
+            <Route
+              path="/admin/pingentes/importar"
+              element={
+                <RequireAdmin>
+                  <AdminPingentesImportar />
                 </RequireAdmin>
               }
             />
