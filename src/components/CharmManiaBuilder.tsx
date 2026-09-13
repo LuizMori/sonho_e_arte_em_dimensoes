@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { Label, Select } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import type { Bead, Charm, Color, Produto, ProdutoCorDb, CharmManiaConfig } from "@/types";
+import type { Bead, Charm, Color, Produto, ProdutoCorDb, ProdutoImagemDb, CharmManiaConfig } from "@/types";
 
 const formatarMoeda = (valor: number) => valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -22,7 +22,7 @@ function SwatchCor({ hex }: { hex: string | null | undefined }) {
 interface CharmManiaBuilderProps {
   produto: Produto & { product_colors?: ProdutoCorDb[] };
   charms: Charm[];
-  caixinha: (Produto & { product_colors?: ProdutoCorDb[] }) | null;
+  caixinha: (Produto & { product_colors?: ProdutoCorDb[]; product_images?: ProdutoImagemDb[] }) | null;
   coresLetraDisponiveis: Color[];
   onAdicionar: (config: CharmManiaConfig, precoTotal: number) => void;
 }
@@ -349,6 +349,13 @@ export function CharmManiaBuilder({
               Incluir caixinha (+{formatarMoeda(caixinha.preco)}){caixinha.stock <= 0 ? " — sem estoque" : ""}
             </span>
           </label>
+          {caixinhaSelecionada && caixinha.product_images?.[0] && (
+            <img
+              src={caixinha.product_images[0].url}
+              alt={caixinha.product_images[0].alt || caixinha.nome}
+              className="mt-3 w-32 h-32 object-cover rounded-xl border border-neutral-light"
+            />
+          )}
           {caixinhaSelecionada && coresCaixinha.length > 0 && (
             <div className="mt-3 max-w-[200px]">
               <Label htmlFor="charm-mania-cor-caixinha">Cor da caixinha</Label>

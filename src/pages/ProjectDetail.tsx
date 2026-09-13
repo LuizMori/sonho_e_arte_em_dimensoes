@@ -14,9 +14,9 @@ import { useAuth } from "@/lib/AuthProvider";
 import { categorias } from "@/data/categorias";
 import { avisoEstoqueSchema, type AvisoEstoqueFormData } from "@/lib/schemas";
 import { CharmManiaBuilder } from "@/components/CharmManiaBuilder";
-import type { Charm, Color, Produto, ProdutoComImagens, ProdutoCorDb, CharmManiaConfig } from "@/types";
+import type { Charm, Color, Produto, ProdutoComImagens, ProdutoCorDb, ProdutoImagemDb, CharmManiaConfig } from "@/types";
 
-type CaixinhaComCores = Produto & { product_colors?: ProdutoCorDb[] };
+type CaixinhaComCores = Produto & { product_colors?: ProdutoCorDb[]; product_images?: ProdutoImagemDb[] };
 
 function AvisoEstoque({ produtoId }: { produtoId: string }) {
   const { user } = useAuth();
@@ -118,8 +118,9 @@ export function ProjectDetail() {
             .order("nome", { ascending: true }),
           supabase
             .from("products")
-            .select("*, product_colors(color_id, colors(id, nome, hex))")
+            .select("*, product_colors(color_id, colors(id, nome, hex)), product_images(*)")
             .eq("slug", "charm-mania-caixinha")
+            .order("ordem", { referencedTable: "product_images" })
             .maybeSingle(),
           supabase
             .from("charm_mania_letter_colors")
