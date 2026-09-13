@@ -193,20 +193,23 @@ export function AdminPingentesImportar() {
       if (!pingenteId) continue;
 
       if (dados.cores.length > 0) {
-        const idsEncontrados: string[] = [];
+        const idsEncontrados = new Set<string>();
         for (const nomeCor of dados.cores) {
           const cor = paletaCores.find((c) => c.nome.toLowerCase() === nomeCor.toLowerCase());
           if (cor) {
-            idsEncontrados.push(cor.id);
+            idsEncontrados.add(cor.id);
           } else {
             ocorrencias.push(`${dados.nome}: cor "${nomeCor}" não existe na paleta, ignorada`);
           }
         }
         await supabase.from("charm_colors").delete().eq("charm_id", pingenteId);
-        if (idsEncontrados.length > 0) {
-          await supabase
+        if (idsEncontrados.size > 0) {
+          const { error: erroCores } = await supabase
             .from("charm_colors")
-            .insert(idsEncontrados.map((colorId) => ({ charm_id: pingenteId, color_id: colorId })));
+            .insert(Array.from(idsEncontrados).map((colorId) => ({ charm_id: pingenteId, color_id: colorId })));
+          if (erroCores) {
+            ocorrencias.push(`${dados.nome}: não foi possível salvar as cores (${erroCores.message})`);
+          }
         }
       }
     }
