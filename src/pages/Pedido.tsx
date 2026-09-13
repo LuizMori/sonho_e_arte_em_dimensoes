@@ -161,7 +161,7 @@ export function Pedido() {
                         Pingentes:{" "}
                         {item.personalizacao.sequencia
                           .filter((c): c is Extract<typeof c, { tipo: "pingente" }> => c.tipo === "pingente")
-                          .map((c) => `${c.nome} (${formatarMoeda(c.preco)})`)
+                          .map((c) => `${c.nome}${c.cor ? ` (${c.cor})` : ""} (${formatarMoeda(c.preco)})`)
                           .join(", ")}
                       </p>
                     )}

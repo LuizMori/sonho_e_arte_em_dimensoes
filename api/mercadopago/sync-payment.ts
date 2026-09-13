@@ -16,7 +16,10 @@ interface OrderItemParaEmail {
   products?: { nome: string } | null;
   nome_produto?: string | null;
   personalizacao?: {
-    sequencia: ({ tipo: "letra"; valor: string; cor?: string | null } | { tipo: "pingente"; nome: string; preco: number })[];
+    sequencia: (
+      | { tipo: "letra"; valor: string; cor?: string | null }
+      | { tipo: "pingente"; nome: string; preco: number; cor?: string | null }
+    )[];
     cordao_cor?: string | null;
     caixinha: { incluida: false } | { incluida: true; nome: string; preco: number; cor: string | null };
   } | null;
@@ -39,8 +42,8 @@ function descreverItem(item: OrderItemParaEmail): string {
       .map((c) => (c.cor ? `${c.valor.toUpperCase()}(${c.cor})` : c.valor.toUpperCase()))
       .join(" ");
     const pingentes = item.personalizacao.sequencia
-      .filter((c): c is { tipo: "pingente"; nome: string; preco: number } => c.tipo === "pingente")
-      .map((c) => c.nome);
+      .filter((c): c is { tipo: "pingente"; nome: string; preco: number; cor?: string | null } => c.tipo === "pingente")
+      .map((c) => (c.cor ? `${c.nome} (${c.cor})` : c.nome));
 
     const detalhes = [
       item.personalizacao.cordao_cor ? `cordão ${item.personalizacao.cordao_cor}` : null,

@@ -111,6 +111,12 @@ export interface ProdutoComImagens extends Produto {
   product_variations?: ProdutoVariacaoDb[];
 }
 
+export interface CharmCorDb {
+  id: string;
+  color_id: string;
+  colors: Color;
+}
+
 export interface Charm {
   id: string;
   nome: string;
@@ -118,13 +124,15 @@ export interface Charm {
   estoque: number;
   imagem_url: string | null;
   created_at: string;
+  charm_colors?: CharmCorDb[];
 }
 
 // Uma "conta" do cordão da Charm Mania, na ordem em que a cliente montou. Letra carrega a
 // cor "ativa" no momento em que foi digitada (no máximo 2 cores distintas por peça).
+// Pingente carrega a cor escolhida entre as cadastradas para aquele pingente, quando houver.
 export type Bead =
   | { tipo: "letra"; valor: string; cor?: string | null }
-  | { tipo: "pingente"; charmId: string };
+  | { tipo: "pingente"; charmId: string; cor?: string | null };
 
 export interface CharmManiaConfig {
   configId: string;
@@ -137,7 +145,7 @@ export interface CharmManiaConfig {
 // Conta de pingente já resolvida (nome/preço), como fica gravada no snapshot do pedido.
 export type BeadResolvido =
   | { tipo: "letra"; valor: string; cor?: string | null }
-  | { tipo: "pingente"; charmId: string; nome: string; preco: number };
+  | { tipo: "pingente"; charmId: string; nome: string; preco: number; cor?: string | null };
 
 export interface PersonalizacaoSnapshot {
   sequencia: BeadResolvido[];

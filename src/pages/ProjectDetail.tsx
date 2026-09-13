@@ -112,7 +112,10 @@ export function ProjectDetail() {
 
       if (produtoCarregado?.categoria === "charm-mania") {
         const [{ data: pingentes }, { data: caixinhaProduto }, { data: coresLetraDb }] = await Promise.all([
-          supabase.from("charms").select("*").order("nome", { ascending: true }),
+          supabase
+            .from("charms")
+            .select("*, charm_colors(color_id, colors(id, nome, hex))")
+            .order("nome", { ascending: true }),
           supabase
             .from("products")
             .select("*, product_colors(color_id, colors(id, nome, hex))")

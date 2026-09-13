@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { supabase } from "@/lib/supabaseClient";
 import { uploadCharmImage } from "@/lib/storage";
-import type { Charm } from "@/types";
+import type { Charm, Color } from "@/types";
 
 const formatarMoeda = (valor: number) => valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -23,17 +23,46 @@ export function AdminPingentes() {
   const [estoque, setEstoque] = useState("");
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [salvando, setSalvando] = useState(false);
+  const [paletaCores, setPaletaCores] = useState<Color[]>([]);
+  const [coresNovoPingente, setCoresNovoPingente] = useState<string[]>([]);
+  const [pingenteExpandido, setPingenteExpandido] = useState<string | null>(null);
 
   const carregar = async () => {
     setCarregando(true);
-    const { data } = await supabase.from("charms").select("*").order("nome", { ascending: true });
+    const [{ data }, { data: cores }] = await Promise.all([
+      supabase.from("charms").select("*, charm_colors(color_id, colors(id, nome, hex))").order("nome", { ascending: true }),
+      supabase.from("colors").select("*").order("nome", { ascending: true }),
+    ]);
     setPingentes((data as Charm[]) ?? []);
+    setPaletaCores((cores as Color[]) ?? []);
     setCarregando(false);
   };
 
   useEffect(() => {
     carregar();
   }, []);
+
+  const alternarCorNovoPingente = (colorId: string) => {
+    setCoresNovoPingente((prev) => (prev.includes(colorId) ? prev.filter((c) => c !== colorId) : [...prev, colorId]));
+  };
+
+  const alternarCorPingenteExistente = async (pingente: Charm, colorId: string) => {
+    const jaTem = (pingente.charm_colors ?? []).some((cc) => cc.color_id === colorId);
+    if (jaTem) {
+      const { error } = await supabase.from("charm_colors").delete().eq("charm_id", pingente.id).eq("color_id", colorId);
+      if (error) {
+        showToast({ title: "Não foi possível remover a cor", description: error.message, variant: "error" });
+        return;
+      }
+    } else {
+      const { error } = await supabase.from("charm_colors").insert({ charm_id: pingente.id, color_id: colorId });
+      if (error) {
+        showToast({ title: "Não foi possível adicionar a cor", description: error.message, variant: "error" });
+        return;
+      }
+    }
+    carregar();
+  };
 
   const handleArquivo = (event: ChangeEvent<HTMLInputElement>) => {
     setArquivo(event.target.files?.[0] ?? null);
@@ -49,23 +78,34 @@ export function AdminPingentes() {
     setSalvando(true);
     try {
       const imagem_url = arquivo ? await uploadCharmImage(arquivo) : null;
-      const { error } = await supabase.from("charms").insert({
-        nome: nomeTrim,
-        preco: precoNum,
-        estoque: Number.isNaN(estoqueNum) ? 0 : estoqueNum,
-        imagem_url,
-      });
+      const { data: novoPingente, error } = await supabase
+        .from("charms")
+        .insert({
+          nome: nomeTrim,
+          preco: precoNum,
+          estoque: Number.isNaN(estoqueNum) ? 0 : estoqueNum,
+          imagem_url,
+        })
+        .select()
+        .single();
 
-      if (error) {
-        const description = error.code === "23505" ? "Esse pingente já existe no catálogo." : error.message;
+      if (error || !novoPingente) {
+        const description = error?.code === "23505" ? "Esse pingente já existe no catálogo." : error?.message;
         showToast({ title: "Não foi possível adicionar o pingente", description, variant: "error" });
         return;
+      }
+
+      if (coresNovoPingente.length > 0) {
+        await supabase
+          .from("charm_colors")
+          .insert(coresNovoPingente.map((colorId) => ({ charm_id: novoPingente.id, color_id: colorId })));
       }
 
       setNome("");
       setPreco("");
       setEstoque("");
       setArquivo(null);
+      setCoresNovoPingente([]);
       showToast({ title: "Pingente adicionado", variant: "success" });
       carregar();
     } catch {
@@ -143,6 +183,30 @@ export function AdminPingentes() {
                 />
               </div>
             </div>
+            {paletaCores.length > 0 && (
+              <div>
+                <p className="label-caps text-navy/70 mb-2">Cores disponíveis (opcional)</p>
+                <div className="flex flex-wrap gap-3">
+                  {paletaCores.map((cor) => {
+                    const selecionada = coresNovoPingente.includes(cor.id);
+                    return (
+                      <button
+                        key={cor.id}
+                        type="button"
+                        onClick={() => alternarCorNovoPingente(cor.id)}
+                        className={`label-caps rounded-full border px-4 py-2 transition-colors ${
+                          selecionada
+                            ? "border-magenta text-magenta"
+                            : "border-neutral-light text-navy/70 hover:border-magenta hover:text-magenta"
+                        }`}
+                      >
+                        {cor.nome}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <div className="flex flex-wrap items-end gap-4">
               <div className="flex-1 min-w-[200px]">
                 <Label htmlFor="imagemPingente">Foto (opcional)</Label>
@@ -168,10 +232,8 @@ export function AdminPingentes() {
         ) : (
           <ul className="space-y-4">
             {pingentes.map((pingente) => (
-              <li
-                key={pingente.id}
-                className="flex items-center gap-4 border-b border-neutral-light/60 pb-4"
-              >
+              <li key={pingente.id} className="border-b border-neutral-light/60 pb-4">
+              <div className="flex items-center gap-4">
                 {pingente.imagem_url ? (
                   <img
                     src={pingente.imagem_url}
@@ -205,11 +267,54 @@ export function AdminPingentes() {
                 </span>
                 <button
                   type="button"
+                  onClick={() =>
+                    setPingenteExpandido((prev) => (prev === pingente.id ? null : pingente.id))
+                  }
+                  className="label-caps text-navy/50 hover:text-magenta transition-colors shrink-0"
+                >
+                  Cores
+                </button>
+                <button
+                  type="button"
                   onClick={() => removerPingente(pingente)}
                   className="label-caps text-navy/50 hover:text-magenta transition-colors shrink-0"
                 >
                   Remover
                 </button>
+              </div>
+              {pingenteExpandido === pingente.id && (
+                <div className="mt-4 pl-16">
+                  {paletaCores.length === 0 ? (
+                    <p className="text-sm text-navy/50">
+                      Nenhuma cor cadastrada ainda. Gerencie a paleta em{" "}
+                      <a href="/admin/cores" className="text-navy hover:text-magenta transition-colors">
+                        Cores
+                      </a>
+                      .
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-3">
+                      {paletaCores.map((cor) => {
+                        const selecionada = (pingente.charm_colors ?? []).some((cc) => cc.color_id === cor.id);
+                        return (
+                          <button
+                            key={cor.id}
+                            type="button"
+                            onClick={() => alternarCorPingenteExistente(pingente, cor.id)}
+                            className={`label-caps rounded-full border px-4 py-2 transition-colors ${
+                              selecionada
+                                ? "border-magenta text-magenta"
+                                : "border-neutral-light text-navy/70 hover:border-magenta hover:text-magenta"
+                            }`}
+                          >
+                            {cor.nome}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
               </li>
             ))}
           </ul>

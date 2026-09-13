@@ -117,7 +117,7 @@ export function AdminPedidos() {
                             .join(" ");
                           const pingentes = item.personalizacao!.sequencia
                             .filter((c): c is Extract<typeof c, { tipo: "pingente" }> => c.tipo === "pingente")
-                            .map((c) => c.nome)
+                            .map((c) => (c.cor ? `${c.nome} (${c.cor})` : c.nome))
                             .join(", ");
                           return (
                             <div key={item.id} className="mt-1">

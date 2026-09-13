@@ -39,6 +39,7 @@ export function CharmManiaBuilder({
   const [caixinhaCor, setCaixinhaCor] = useState("");
   const [cordaoCor, setCordaoCor] = useState("");
   const [corAtiva, setCorAtiva] = useState("");
+  const [corPorPingente, setCorPorPingente] = useState<Record<string, string>>({});
   const [letra, setLetra] = useState("");
   const letraInputRef = useRef<HTMLInputElement>(null);
 
@@ -67,6 +68,17 @@ export function CharmManiaBuilder({
     [coresLetraDisponiveis]
   );
 
+  const coresPorPingente = useMemo(() => {
+    const mapa = new Map<string, Color[]>();
+    for (const charm of charms) {
+      const cores = (charm.charm_colors ?? [])
+        .map((cc) => cc.colors)
+        .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+      mapa.set(charm.id, cores);
+    }
+    return mapa;
+  }, [charms]);
+
   useEffect(() => {
     if (coresCaixinha.length > 0 && !coresCaixinha.some((c) => c.nome === caixinhaCor)) {
       setCaixinhaCor(coresCaixinha[0].nome);
@@ -84,6 +96,21 @@ export function CharmManiaBuilder({
       setCorAtiva(coresLetraDisponiveis[0].nome);
     }
   }, [coresLetraDisponiveis, corAtiva]);
+
+  useEffect(() => {
+    setCorPorPingente((prev) => {
+      const proximo = { ...prev };
+      let mudou = false;
+      for (const charm of charms) {
+        const cores = coresPorPingente.get(charm.id) ?? [];
+        if (cores.length > 0 && !cores.some((c) => c.nome === proximo[charm.id])) {
+          proximo[charm.id] = cores[0].nome;
+          mudou = true;
+        }
+      }
+      return mudou ? proximo : prev;
+    });
+  }, [charms, coresPorPingente]);
 
   // No máximo 2 cores de letra distintas por peça — uma vez que 2 já foram usadas na
   // sequência, só se pode trocar a "cor ativa" entre essas 2 (não pra uma terceira).
@@ -109,12 +136,15 @@ export function CharmManiaBuilder({
 
   const pingentesEscolhidos = useMemo(() => {
     return sequencia
-      .filter((c): c is { tipo: "pingente"; charmId: string } => c.tipo === "pingente")
-      .map((c) => charms.find((charm) => charm.id === c.charmId))
-      .filter((c): c is Charm => Boolean(c));
+      .filter((c): c is { tipo: "pingente"; charmId: string; cor?: string | null } => c.tipo === "pingente")
+      .map((c) => {
+        const charm = charms.find((charm) => charm.id === c.charmId);
+        return charm ? { charm, cor: c.cor ?? null } : null;
+      })
+      .filter((c): c is { charm: Charm; cor: string | null } => Boolean(c));
   }, [sequencia, charms]);
 
-  const totalPingentes = pingentesEscolhidos.reduce((soma, c) => soma + c.preco, 0);
+  const totalPingentes = pingentesEscolhidos.reduce((soma, c) => soma + c.charm.preco, 0);
   const totalCaixinha = caixinhaSelecionada && caixinha ? caixinha.preco : 0;
   const total = produto.preco + totalLetras * valorLetra + totalPingentes + totalCaixinha;
 
@@ -143,7 +173,8 @@ export function CharmManiaBuilder({
 
   const adicionarPingente = (charm: Charm) => {
     if (limiteAtingido) return;
-    setSequencia((prev) => [...prev, { tipo: "pingente", charmId: charm.id }]);
+    const cor = corPorPingente[charm.id] ?? null;
+    setSequencia((prev) => [...prev, { tipo: "pingente", charmId: charm.id, cor }]);
     // Mantém o foco no campo de letra, pra dar pra continuar digitando a palavra sem
     // precisar clicar de novo — clicar num pingente-botão tira o foco do input.
     letraInputRef.current?.focus();
@@ -186,12 +217,13 @@ export function CharmManiaBuilder({
         ) : (
           sequencia.map((conta, index) => {
             const hexLetra = conta.tipo === "letra" && conta.cor ? hexPorNomeLetra.get(conta.cor) : null;
+            const titulo = conta.cor ? `Remover (cor: ${conta.cor})` : "Remover";
             return (
               <button
                 key={index}
                 type="button"
                 onClick={() => removerConta(index)}
-                title={conta.tipo === "letra" && conta.cor ? `Remover (cor: ${conta.cor})` : "Remover"}
+                title={titulo}
                 style={hexLetra ? { backgroundColor: hexLetra } : undefined}
                 className={
                   conta.tipo === "letra"
@@ -265,16 +297,38 @@ export function CharmManiaBuilder({
             {charms.map((charm) => {
               const usados = contagemPorPingente.get(charm.id) ?? 0;
               const esgotado = usados >= charm.estoque;
+              const coresCharm = coresPorPingente.get(charm.id) ?? [];
+              const corSelecionada = corPorPingente[charm.id];
               return (
-                <button
-                  key={charm.id}
-                  type="button"
-                  disabled={esgotado || limiteAtingido}
-                  onClick={() => adicionarPingente(charm)}
-                  className="label-caps rounded-full border border-neutral-light px-4 py-2 text-navy/70 hover:border-magenta hover:text-magenta transition-colors disabled:opacity-30 disabled:hover:border-neutral-light disabled:hover:text-navy/70 disabled:cursor-not-allowed"
-                >
-                  {charm.nome} · {formatarMoeda(charm.preco)}
-                </button>
+                <div key={charm.id} className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={esgotado || limiteAtingido}
+                    onClick={() => adicionarPingente(charm)}
+                    className="label-caps rounded-full border border-neutral-light px-4 py-2 text-navy/70 hover:border-magenta hover:text-magenta transition-colors disabled:opacity-30 disabled:hover:border-neutral-light disabled:hover:text-navy/70 disabled:cursor-not-allowed"
+                  >
+                    {charm.nome} · {formatarMoeda(charm.preco)}
+                  </button>
+                  {coresCharm.length > 0 && (
+                    <div className="flex items-center gap-1.5">
+                      <SwatchCor hex={coresCharm.find((c) => c.nome === corSelecionada)?.hex} />
+                      <Select
+                        aria-label={`Cor de ${charm.nome}`}
+                        value={corSelecionada ?? ""}
+                        onChange={(e) =>
+                          setCorPorPingente((prev) => ({ ...prev, [charm.id]: e.target.value }))
+                        }
+                        className="text-xs py-1.5"
+                      >
+                        {coresCharm.map((cor) => (
+                          <option key={cor.nome} value={cor.nome}>
+                            {cor.nome}
+                          </option>
+                        ))}
+                      </Select>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -320,7 +374,7 @@ export function CharmManiaBuilder({
 
       <div className="border border-neutral-light rounded-xl px-5 py-4 mb-6 text-sm">
         <div className="flex items-center justify-between text-navy/70 py-1">
-          <span>Base (cordão + ponteira){coresCordao.length > 0 && cordaoCor ? ` (${cordaoCor})` : ""}</span>
+          <span>Base{coresCordao.length > 0 && cordaoCor ? ` (${cordaoCor})` : ""}</span>
           <span>{formatarMoeda(produto.preco)}</span>
         </div>
         {totalLetras > 0 && (
@@ -331,9 +385,12 @@ export function CharmManiaBuilder({
             <span>{formatarMoeda(totalLetras * valorLetra)}</span>
           </div>
         )}
-        {pingentesEscolhidos.map((charm, index) => (
+        {pingentesEscolhidos.map(({ charm, cor }, index) => (
           <div key={`${charm.id}-${index}`} className="flex items-center justify-between text-navy/70 py-1">
-            <span>{charm.nome}</span>
+            <span>
+              {charm.nome}
+              {cor ? ` (${cor})` : ""}
+            </span>
             <span>{formatarMoeda(charm.preco)}</span>
           </div>
         ))}

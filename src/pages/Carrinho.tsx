@@ -36,7 +36,9 @@ export function Carrinho() {
             "id",
             items.map((item) => item.productId)
           ),
-        temCharmMania ? supabase.from("charms").select("*") : Promise.resolve({ data: [] }),
+        temCharmMania
+          ? supabase.from("charms").select("*, charm_colors(color_id, colors(id, nome, hex))")
+          : Promise.resolve({ data: [] }),
       ]);
       setProdutos((data as ProdutoComImagens[]) ?? []);
       setCharms((pingentes as Charm[]) ?? []);
@@ -59,9 +61,11 @@ export function Carrinho() {
 
   const resumoCharmMania = (item: (typeof items)[number]) => {
     if (!item.charmMania) return null;
-    const partes = item.charmMania.sequencia.map((conta) =>
-      conta.tipo === "letra" ? conta.valor.toUpperCase() : charms.find((c) => c.id === conta.charmId)?.nome ?? "Pingente"
-    );
+    const partes = item.charmMania.sequencia.map((conta) => {
+      if (conta.tipo === "letra") return conta.valor.toUpperCase();
+      const nomePingente = charms.find((c) => c.id === conta.charmId)?.nome ?? "Pingente";
+      return conta.cor ? `${nomePingente} (${conta.cor})` : nomePingente;
+    });
     const cordao = item.charmMania.cordaoCor ? `Cordão ${item.charmMania.cordaoCor}` : null;
     const texto = [cordao, partes.join(" · ") || "Sem personalização"].filter(Boolean).join(" · ");
     if (!item.charmMania.caixinha) return texto;

@@ -395,8 +395,8 @@ export function AdminProdutoForm() {
             {categoriaSelecionada === "charm-mania" && (
               <div className="rounded-xl border border-neutral-light bg-cream-light/60 px-5 py-5 space-y-4">
                 <p className="text-sm text-navy/70">
-                  Isto não é uma peça pronta — é a configuração da <strong>peça-base</strong> (cordão +
-                  ponteira) usada pelo montador que a cliente preenche no Portfólio. Nome e descrição
+                  Isto não é uma peça pronta — é a configuração da <strong>peça-base</strong> (cordão)
+                  usada pelo montador que a cliente preenche no Portfólio. Nome e descrição
                   aparecem no topo daquela página; preço, peso/dimensões e estoque abaixo são só da peça-base
                   (a cliente nunca escolhe isso — ela escolhe letras e pingentes no montador, e o preço final
                   é a soma de tudo). Só existe uma Charm Mania: depois de criada, você volta aqui pra
