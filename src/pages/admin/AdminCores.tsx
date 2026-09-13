@@ -52,6 +52,7 @@ export function AdminCores() {
   };
 
   const atualizarHex = async (cor: Color, hex: string) => {
+    if (hex === cor.hex) return;
     const hexAnterior = cor.hex;
     setCores((prev) => prev.map((c) => (c.id === cor.id ? { ...c, hex } : c)));
 
@@ -66,7 +67,9 @@ export function AdminCores() {
         description: error?.message,
         variant: "error",
       });
+      return;
     }
+    showToast({ title: "Cor atualizada", variant: "success" });
   };
 
   const removerCor = async (cor: Color) => {

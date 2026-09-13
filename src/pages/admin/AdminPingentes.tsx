@@ -57,12 +57,14 @@ export function AdminPingentes() {
         showToast({ title: "Não foi possível remover a cor", description: error.message, variant: "error" });
         return;
       }
+      showToast({ title: "Cor removida", variant: "success" });
     } else {
       const { error } = await supabase.from("charm_colors").insert({ charm_id: pingente.id, color_id: colorId });
       if (error) {
         showToast({ title: "Não foi possível adicionar a cor", description: error.message, variant: "error" });
         return;
       }
+      showToast({ title: "Cor adicionada", variant: "success" });
     }
     carregar();
   };
@@ -130,9 +132,31 @@ export function AdminPingentes() {
   };
 
   const atualizarCampo = async (pingente: Charm, campo: "preco" | "estoque", valor: number) => {
-    if (Number.isNaN(valor) || valor < 0) return;
-    await supabase.from("charms").update({ [campo]: valor }).eq("id", pingente.id);
+    if (Number.isNaN(valor) || valor < 0 || valor === pingente[campo]) return;
+    const { error } = await supabase.from("charms").update({ [campo]: valor }).eq("id", pingente.id);
+    if (error) {
+      showToast({ title: "Não foi possível salvar a alteração", description: error.message, variant: "error" });
+      return;
+    }
     setPingentes((prev) => prev.map((p) => (p.id === pingente.id ? { ...p, [campo]: valor } : p)));
+    showToast({ title: campo === "preco" ? "Preço atualizado" : "Estoque atualizado", variant: "success" });
+  };
+
+  const atualizarNome = async (pingente: Charm, valor: string) => {
+    const nomeTrim = valor.trim();
+    if (!nomeTrim || nomeTrim === pingente.nome) {
+      carregar();
+      return;
+    }
+    const { error } = await supabase.from("charms").update({ nome: nomeTrim }).eq("id", pingente.id);
+    if (error) {
+      const description = error.code === "23505" ? "Já existe um pingente com esse nome." : error.message;
+      showToast({ title: "Não foi possível renomear o pingente", description, variant: "error" });
+      carregar();
+      return;
+    }
+    setPingentes((prev) => prev.map((p) => (p.id === pingente.id ? { ...p, nome: nomeTrim } : p)));
+    showToast({ title: "Nome atualizado", variant: "success" });
   };
 
   const removerPingente = async (pingente: Charm) => {
@@ -269,7 +293,14 @@ export function AdminPingentes() {
                 ) : (
                   <div className="w-12 h-12 rounded-lg bg-neutral-light/40 shrink-0" />
                 )}
-                <span className="text-navy flex-1 min-w-[100px]">{pingente.nome}</span>
+                <input
+                  key={`${pingente.id}-${pingente.nome}`}
+                  type="text"
+                  defaultValue={pingente.nome}
+                  onBlur={(e) => atualizarNome(pingente, e.target.value)}
+                  className="flex-1 min-w-[100px] bg-transparent border-b border-neutral-light py-1 text-navy focus:outline-none focus:border-magenta"
+                  aria-label={`Nome do pingente ${pingente.nome}`}
+                />
                 <input
                   type="number"
                   step="0.01"
