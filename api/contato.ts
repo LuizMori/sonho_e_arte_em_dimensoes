@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
 interface ContatoPayload {
@@ -9,9 +10,54 @@ interface ContatoPayload {
   mensagem: string;
 }
 
+const LIMITE_TENTATIVAS = 5;
+const JANELA_MS = 10 * 60 * 1000; // 10 minutos
+
+function ipDoRequest(req: VercelRequest): string {
+  const forwardedFor = req.headers["x-forwarded-for"];
+  const primeiro = Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor;
+  return primeiro?.split(",")[0]?.trim() || req.socket.remoteAddress || "desconhecido";
+}
+
+// Endpoint público e sem autenticação: sem isso, dá pra automatizar chamadas e usar a caixa
+// de CONTACT_EMAIL pra spam. Cada linha em rate_limits é uma tentativa; se já houver
+// LIMITE_TENTATIVAS na janela recente para o mesmo IP+endpoint, bloqueia. Falha aberta (não
+// bloqueia) se o Supabase não estiver configurado, pra não derrubar o formulário por causa
+// só do rate limit.
+async function limiteExcedido(chave: string): Promise<boolean> {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !supabaseKey) return false;
+
+  const supabase = createClient(supabaseUrl, supabaseKey);
+  const desde = new Date(Date.now() - JANELA_MS).toISOString();
+
+  const { count } = await supabase
+    .from("rate_limits")
+    .select("id", { count: "exact", head: true })
+    .eq("chave", chave)
+    .gte("created_at", desde);
+
+  if ((count ?? 0) >= LIMITE_TENTATIVAS) return true;
+
+  await supabase.from("rate_limits").insert({ chave });
+
+  // Limpeza oportunista de linhas antigas (sem precisar de um cron dedicado só pra isso).
+  if (Math.random() < 0.05) {
+    await supabase.from("rate_limits").delete().lt("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+  }
+
+  return false;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Método não permitido" });
+    return;
+  }
+
+  if (await limiteExcedido(`contato:${ipDoRequest(req)}`)) {
+    res.status(429).json({ error: "Muitas tentativas. Aguarde alguns minutos e tente novamente." });
     return;
   }
 
