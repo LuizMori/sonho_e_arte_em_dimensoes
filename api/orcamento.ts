@@ -20,6 +20,19 @@ interface OrcamentoPayload {
 
 const TAMANHO_MAXIMO_ANEXO = 3 * 1024 * 1024; // 3MB, dentro do limite de payload das funções serverless da Vercel
 
+// Extensões esperadas para um pedido de orçamento de impressão 3D (arquivo de modelo, ou
+// imagem/PDF de referência) — evita que o formulário público seja usado pra anexar e
+// distribuir qualquer tipo de arquivo (executáveis, scripts) pelo e-mail da loja.
+const EXTENSOES_ANEXO_PERMITIDAS = [
+  "stl", "obj", "3mf", "step", "stp", "zip",
+  "jpg", "jpeg", "png", "gif", "webp", "pdf",
+];
+
+function extensaoPermitida(nomeArquivo: string): boolean {
+  const extensao = nomeArquivo.split(".").pop()?.toLowerCase();
+  return Boolean(extensao) && EXTENSOES_ANEXO_PERMITIDAS.includes(extensao!);
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Método não permitido" });
@@ -45,6 +58,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (arquivo && Buffer.byteLength(arquivo.conteudo, "base64") > TAMANHO_MAXIMO_ANEXO) {
     res.status(413).json({ error: "Arquivo muito grande" });
+    return;
+  }
+
+  if (arquivo && !extensaoPermitida(arquivo.nome)) {
+    res.status(400).json({ error: "Tipo de arquivo não aceito. Envie STL, OBJ, 3MF, STEP, ZIP, PDF ou imagem." });
     return;
   }
 
