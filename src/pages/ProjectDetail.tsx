@@ -203,7 +203,10 @@ export function ProjectDetail() {
       <section className="pt-32 md:pt-36">
         <div className="container">
           <Reveal>
-            <Link to="/portfolio" className="label-caps text-navy/60 hover:text-magenta transition-colors">
+            <Link
+              to={`/portfolio?categoria=${produto.categoria}`}
+              className="label-caps text-navy/60 hover:text-magenta transition-colors"
+            >
               Voltar ao portfólio
             </Link>
           </Reveal>

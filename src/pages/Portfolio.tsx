@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { Reveal } from "@/components/Reveal";
 import { CategoryFilter } from "@/components/CategoryFilter";
@@ -30,13 +30,32 @@ export function Portfolio() {
     "Explore o portfólio de peças impressas em 3D da Sonho e Arte em Dimensões: decoração, papelaria, presentes, geek e muito mais."
   );
 
-  const [categoriaAtiva, setCategoriaAtiva] = useState<string | null>(null);
+  // Categoria, busca e página ficam na URL (não em useState) para que o botão voltar do
+  // navegador e o link "Voltar ao portfólio" do produto restaurem exatamente a seção em que
+  // a pessoa estava, em vez de cair sempre em "Todos".
+  const [searchParams, setSearchParams] = useSearchParams();
+  const categoriaParam = searchParams.get("categoria");
+  const categoriaAtiva = categorias.some((c) => c.slug === categoriaParam) ? categoriaParam : null;
+  const busca = searchParams.get("busca") ?? "";
+  const pagina = Math.max(1, Number(searchParams.get("pagina")) || 1);
+
+  const atualizarParams = (mudancas: Record<string, string | null>) => {
+    const proximo = new URLSearchParams(searchParams);
+    for (const [chave, valor] of Object.entries(mudancas)) {
+      if (valor) proximo.set(chave, valor);
+      else proximo.delete(chave);
+    }
+    setSearchParams(proximo, { replace: true });
+  };
+
+  const setCategoriaAtiva = (slug: string | null) => atualizarParams({ categoria: slug, pagina: null });
+  const setBusca = (termo: string) => atualizarParams({ busca: termo || null, pagina: null });
+  const setPagina = (numero: number) => atualizarParams({ pagina: numero > 1 ? String(numero) : null });
+
   const [produtos, setProdutos] = useState<ProdutoComImagens[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [galeriaPersonalizados, setGaleriaPersonalizados] = useState<CustomGalleryItem[]>([]);
   const [galeriaCharmMania, setGaleriaCharmMania] = useState<CharmManiaGalleryItem[]>([]);
-  const [busca, setBusca] = useState("");
-  const [pagina, setPagina] = useState(1);
   const [mostrarTodos, setMostrarTodos] = useState(false);
 
   useEffect(() => {
@@ -84,10 +103,6 @@ export function Portfolio() {
       return passaCategoria && passaBusca;
     });
   }, [categoriaAtiva, produtos, busca]);
-
-  useEffect(() => {
-    setPagina(1);
-  }, [categoriaAtiva, busca]);
 
   const totalPaginas = Math.max(1, Math.ceil(produtosFiltrados.length / ITENS_POR_PAGINA));
   const produtosPagina = mostrarTodos
