@@ -17,4 +17,5 @@ export const COLUNAS_PRODUTO_CSV = [
   "tamanho_exibicao",
   "cores",
   "variacoes",
+  "visivel_ate",
 ] as const;

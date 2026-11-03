@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { supabase } from "@/lib/supabaseClient";
 import { baixarCsv } from "@/lib/csv";
+import { produtoExpirado } from "@/lib/utils";
 import { categoriasProduto } from "@/data/categorias";
 import { COLUNAS_PRODUTO_CSV } from "@/data/produtoCsvColunas";
 import type { Produto } from "@/types";
@@ -76,6 +77,7 @@ export function AdminProdutos() {
       p.tamanho_exibicao ?? "",
       "",
       "",
+      p.visivel_ate ?? "",
     ]);
     baixarCsv("produtos.csv", [...COLUNAS_PRODUTO_CSV], linhas);
   };
@@ -165,6 +167,10 @@ export function AdminProdutos() {
                   <p className="text-navy/60 text-sm mt-1">
                     {produto.preco.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} · Estoque:{" "}
                     {produto.stock} · {produto.ativo ? "Ativo" : "Inativo"}
+                    {produto.visivel_ate &&
+                      (produtoExpirado(produto.visivel_ate)
+                        ? " · Fora do portfólio (expirou)"
+                        : ` · Visível até ${produto.visivel_ate.split("-").reverse().join("/")}`)}
                   </p>
                 </div>
                 <div className="flex items-center gap-4 shrink-0">

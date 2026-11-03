@@ -14,6 +14,7 @@ import { useAuth } from "@/lib/AuthProvider";
 import { categorias } from "@/data/categorias";
 import { avisoEstoqueSchema, type AvisoEstoqueFormData } from "@/lib/schemas";
 import { CharmManiaBuilder } from "@/components/CharmManiaBuilder";
+import { dataHoje, produtoExpirado } from "@/lib/utils";
 import type { Charm, Color, Produto, ProdutoComImagens, ProdutoCorDb, ProdutoImagemDb, CharmManiaConfig } from "@/types";
 
 type CaixinhaComCores = Produto & { product_colors?: ProdutoCorDb[]; product_images?: ProdutoImagemDb[] };
@@ -149,6 +150,7 @@ export function ProjectDetail() {
         .select("slug, nome")
         .eq("ativo", true)
         .eq("exibir_catalogo", true)
+        .or(`visivel_ate.is.null,visivel_ate.gte.${dataHoje()}`)
         .order("created_at", { ascending: false });
       if (!data || data.length <= 1) {
         setProximo(null);
@@ -259,6 +261,18 @@ export function ProjectDetail() {
                 .filter((item) => item.productId === produto.id)
                 .reduce((total, item) => total + item.quantidade, 0);
               const restante = Math.max(0, produto.stock - jaNoCarrinho);
+
+              if (produtoExpirado(produto.visivel_ate)) {
+                return (
+                  <p className="text-navy/70">
+                    Esta peça não está mais disponível para compra.{" "}
+                    <Link to="/portfolio" className="text-navy hover:text-magenta transition-colors">
+                      Ver outras peças
+                    </Link>
+                    .
+                  </p>
+                );
+              }
 
               if (produto.stock === 0) {
                 return <AvisoEstoque produtoId={produto.id} />;

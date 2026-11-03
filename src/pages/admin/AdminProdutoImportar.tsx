@@ -35,6 +35,7 @@ interface LinhaImportacao {
     fotos: string[];
     slug: string;
     tamanho_exibicao: string | null;
+    visivel_ate?: string | null;
     cores: string[];
     variacoes: string[];
   };
@@ -107,6 +108,13 @@ function validarLinha(bruto: Record<string, string>, numero: number): LinhaImpor
     .map((nome) => nome.trim())
     .filter((nome) => nome.length > 0);
 
+  const visivelAteBruto = bruto.visivel_ate?.trim() ?? "";
+  const dataBr = visivelAteBruto.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  const visivelAte = dataBr ? `${dataBr[3]}-${dataBr[2]}-${dataBr[1]}` : visivelAteBruto;
+  if (visivelAte && (!/^\d{4}-\d{2}-\d{2}$/.test(visivelAte) || Number.isNaN(Date.parse(visivelAte)))) {
+    erros.push("visivel_ate inválido (use AAAA-MM-DD ou DD/MM/AAAA)");
+  }
+
   if (erros.length > 0) {
     return { numero, bruto, erros };
   }
@@ -133,6 +141,8 @@ function validarLinha(bruto: Record<string, string>, numero: number): LinhaImpor
       fotos,
       slug,
       tamanho_exibicao: bruto.tamanho_exibicao?.trim() || null,
+      // undefined = planilha sem a coluna: não mexe na data que o produto já tem.
+      visivel_ate: "visivel_ate" in bruto ? visivelAte || null : undefined,
       cores,
       variacoes,
     },
@@ -195,6 +205,7 @@ export function AdminProdutoImportar() {
       "Tamanho único",
       "Preto;Branco",
       "",
+      "",
     ];
     const conteudo = [paraLinhaCsv([...COLUNAS]), paraLinhaCsv(exemplo)].join("\n");
     const blob = new Blob([conteudo], { type: "text/csv;charset=utf-8" });
@@ -252,6 +263,7 @@ export function AdminProdutoImportar() {
         ativo: dados.ativo,
         destaque: dados.destaque,
         tamanho_exibicao: dados.tamanho_exibicao,
+        ...(dados.visivel_ate !== undefined ? { visivel_ate: dados.visivel_ate } : {}),
       };
 
       const { data: existente } = await supabase
@@ -388,7 +400,10 @@ export function AdminProdutoImportar() {
             na paleta são ignorados. A coluna <code className="text-navy">variacoes</code> é opcional e
             aceita qualquer texto separado por <code className="text-navy">;</code> (ex:
             "Branca de Neve;Cinderela;Elsa") — use quando o produto tem opções que não são cor, como
-            personagens ou estampas.
+            personagens ou estampas. A coluna <code className="text-navy">visivel_ate</code> é opcional
+            (AAAA-MM-DD ou DD/MM/AAAA): depois dessa data o produto sai do portfólio, mas continua
+            cadastrado. Em atualização de produto existente, célula em branco remove a data; se a
+            planilha não tiver a coluna, a data atual é mantida.
           </p>
 
           <div className="flex flex-wrap gap-4 mt-8">

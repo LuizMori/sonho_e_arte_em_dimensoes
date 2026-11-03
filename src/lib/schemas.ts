@@ -95,6 +95,7 @@ export const produtoSchema = z.object({
   stock: z.coerce.number().int().min(0, "Informe a quantidade em estoque"),
   ativo: z.boolean(),
   tamanhoExibicao: z.string().trim().optional(),
+  visivelAte: z.string().optional(),
   valorLetra: z.preprocess(
     (valor) => (valor === "" || valor === null || valor === undefined ? undefined : valor),
     z.coerce.number().positive("Informe o valor por letra").optional()

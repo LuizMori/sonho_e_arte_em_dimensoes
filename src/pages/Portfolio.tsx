@@ -8,6 +8,7 @@ import { Pagination } from "@/components/Pagination";
 import { Button } from "@/components/ui/Button";
 import { supabase } from "@/lib/supabaseClient";
 import { categorias } from "@/data/categorias";
+import { dataHoje } from "@/lib/utils";
 import type { CharmManiaGalleryItem, CustomGalleryItem, ProdutoComImagens } from "@/types";
 
 const SUGESTOES_PERSONALIZADOS = [
@@ -65,6 +66,7 @@ export function Portfolio() {
         .select("*, product_images(*)")
         .eq("ativo", true)
         .eq("exibir_catalogo", true)
+        .or(`visivel_ate.is.null,visivel_ate.gte.${dataHoje()}`)
         .order("created_at", { ascending: false })
         .order("ordem", { referencedTable: "product_images" });
       setProdutos((data as ProdutoComImagens[]) ?? []);

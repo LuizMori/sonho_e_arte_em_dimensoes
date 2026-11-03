@@ -96,6 +96,7 @@ export function AdminProdutoForm() {
           stock: produto.stock,
           ativo: produto.ativo,
           tamanhoExibicao: produto.tamanho_exibicao ?? "",
+          visivelAte: produto.visivel_ate ?? "",
           valorLetra: produto.valor_letra ?? undefined,
           limiteContas: produto.limite_contas ?? undefined,
         });
@@ -183,6 +184,7 @@ export function AdminProdutoForm() {
       stock: data.stock,
       ativo: data.ativo,
       tamanho_exibicao: data.tamanhoExibicao || null,
+      visivel_ate: data.visivelAte || null,
       valor_letra: data.categoria === "charm-mania" ? data.valorLetra ?? null : null,
       limite_contas: data.categoria === "charm-mania" ? data.limiteContas ?? null : null,
     };
@@ -519,6 +521,16 @@ export function AdminProdutoForm() {
               <p className="text-xs text-navy/50 mt-2">
                 Aparece na página do produto no lugar das medidas em cm. Deixe em branco para continuar
                 mostrando a dimensão exata.
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="visivelAte">Visível no portfólio até (opcional)</Label>
+              <Input id="visivelAte" type="date" className="max-w-[220px]" {...register("visivelAte")} />
+              <p className="text-xs text-navy/50 mt-2">
+                Útil para itens sazonais. Depois dessa data o produto sai do portfólio, da busca e da
+                home, mas continua cadastrado aqui, com todas as informações. Para ele voltar, apague ou
+                mude a data. Deixe em branco para não expirar.
               </p>
             </div>
 

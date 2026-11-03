@@ -10,6 +10,7 @@ import { HeroArt } from "@/components/HeroArt";
 import { TestimonialsSection } from "@/components/TestimonialsSection";
 import { Button } from "@/components/ui/Button";
 import { supabase } from "@/lib/supabaseClient";
+import { dataHoje } from "@/lib/utils";
 import { categorias } from "@/data/categorias";
 import { servicos } from "@/data/servicos";
 import { filosofia } from "@/data/institucional";
@@ -70,6 +71,7 @@ export function Home() {
         .eq("ativo", true)
         .eq("destaque", true)
         .eq("exibir_catalogo", true)
+        .or(`visivel_ate.is.null,visivel_ate.gte.${dataHoje()}`)
         .order("created_at", { ascending: false })
         .order("ordem", { referencedTable: "product_images" });
       setProdutosDestaque((data as ProdutoComImagens[]) ?? []);

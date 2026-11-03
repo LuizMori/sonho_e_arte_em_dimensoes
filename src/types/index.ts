@@ -97,6 +97,7 @@ export interface Produto {
   categoria: CategoriaSlug;
   destaque: boolean;
   tamanho_exibicao: string | null;
+  visivel_ate: string | null;
   exibir_catalogo: boolean;
   valor_letra: number | null;
   limite_contas: number | null;
