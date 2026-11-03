@@ -105,9 +105,10 @@ export function Portfolio() {
   }, [categoriaAtiva, produtos, busca]);
 
   const totalPaginas = Math.max(1, Math.ceil(produtosFiltrados.length / ITENS_POR_PAGINA));
+  const paginaEfetiva = Math.min(pagina, totalPaginas);
   const produtosPagina = mostrarTodos
     ? produtosFiltrados
-    : produtosFiltrados.slice((pagina - 1) * ITENS_POR_PAGINA, pagina * ITENS_POR_PAGINA);
+    : produtosFiltrados.slice((paginaEfetiva - 1) * ITENS_POR_PAGINA, paginaEfetiva * ITENS_POR_PAGINA);
 
   return (
     <section className="pt-40 pb-24 md:pt-48 md:pb-32">
@@ -244,7 +245,7 @@ export function Portfolio() {
 
               {produtosFiltrados.length > ITENS_POR_PAGINA && (
                 <Pagination
-                  pagina={pagina}
+                  pagina={paginaEfetiva}
                   totalPaginas={totalPaginas}
                   mostrarTodos={mostrarTodos}
                   onPaginaChange={setPagina}
