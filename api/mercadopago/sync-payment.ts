@@ -15,6 +15,7 @@ interface OrderItemParaEmail {
   variacao?: string | null;
   products?: { nome: string } | null;
   nome_produto?: string | null;
+  adicional?: { nome: string; preco: number } | null;
   personalizacao?: {
     sequencia: (
       | { tipo: "letra"; valor: string; cor?: string | null }
@@ -57,7 +58,11 @@ function descreverItem(item: OrderItemParaEmail): string {
     return detalhes.length > 0 ? `${base}\n     ${detalhes.join(" · ")}` : base;
   }
 
-  const detalheSimples = [item.cor && `cor ${item.cor}`, item.variacao && `variação ${item.variacao}`]
+  const detalheSimples = [
+    item.cor && `cor ${item.cor}`,
+    item.variacao && `variação ${item.variacao}`,
+    item.adicional && `COM ${item.adicional.nome}`,
+  ]
     .filter(Boolean)
     .join(" · ");
   return detalheSimples ? `${base} (${detalheSimples})` : base;

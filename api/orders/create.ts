@@ -8,6 +8,7 @@ interface CreateOrderItemPayload {
   quantidade: number;
   cor?: string | null;
   variacao?: string | null;
+  adicional?: boolean;
   personalizacao?: {
     sequencia: Bead[];
     cordaoCor?: string | null;
@@ -186,6 +187,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         quantidade: item.quantidade,
         cor: item.cor ?? null,
         variacao: item.variacao ?? null,
+        adicional: item.adicional === true,
         personalizacao: item.personalizacao ?? null,
       })),
       p_cep_destino: cepDestino,

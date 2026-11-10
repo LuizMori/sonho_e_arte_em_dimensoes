@@ -55,7 +55,9 @@ export function Carrinho() {
     .filter((linha): linha is { item: (typeof items)[number]; produto: ProdutoComImagens } => linha !== null);
 
   const precoLinha = (item: (typeof items)[number], produto: ProdutoComImagens) =>
-    item.charmMania && item.precoUnitario !== null ? item.precoUnitario : produto.preco;
+    item.charmMania && item.precoUnitario !== null
+      ? item.precoUnitario
+      : produto.preco + (item.adicional ? produto.adicional_preco ?? 0 : 0);
 
   const subtotal = linhas.reduce((total, { item, produto }) => total + precoLinha(item, produto) * item.quantidade, 0);
 
@@ -98,7 +100,7 @@ export function Carrinho() {
                 const preco = precoLinha(item, produto);
                 return (
                   <Reveal
-                    key={`${produto.id}-${item.cor ?? ""}-${item.variacao ?? ""}-${item.charmMania?.configId ?? ""}`}
+                    key={`${produto.id}-${item.cor ?? ""}-${item.variacao ?? ""}-${item.adicional}-${item.charmMania?.configId ?? ""}`}
                     className="flex gap-6 items-center border-b border-neutral-light pb-8"
                   >
                     {item.charmMania ? (
@@ -121,9 +123,13 @@ export function Carrinho() {
                       {item.charmMania ? (
                         <p className="text-navy/50 text-sm mt-1">{resumoCharmMania(item)}</p>
                       ) : (
-                        (item.cor || item.variacao) && (
+                        (item.cor || item.variacao || (item.adicional && produto.adicional_nome)) && (
                           <p className="text-navy/50 text-sm mt-1">
-                            {[item.cor && `Cor: ${item.cor}`, item.variacao && `Variação: ${item.variacao}`]
+                            {[
+                              item.cor && `Cor: ${item.cor}`,
+                              item.variacao && `Variação: ${item.variacao}`,
+                              item.adicional && produto.adicional_nome && `+ ${produto.adicional_nome}`,
+                            ]
                               .filter(Boolean)
                               .join(" · ")}
                           </p>
@@ -151,14 +157,16 @@ export function Carrinho() {
                                   produto.id,
                                   Math.min(Number(e.target.value), produto.stock),
                                   item.cor,
-                                  item.variacao
+                                  item.variacao,
+                                  null,
+                                  item.adicional
                                 )
                               }
                               className="w-16 bg-transparent border-b border-neutral-light py-1 text-navy focus:outline-none focus:border-magenta"
                             />
                             <button
                               type="button"
-                              onClick={() => removeItem(produto.id, item.cor, item.variacao)}
+                              onClick={() => removeItem(produto.id, item.cor, item.variacao, null, item.adicional)}
                               className="label-caps text-navy/50 hover:text-magenta transition-colors"
                             >
                               Remover

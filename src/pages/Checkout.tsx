@@ -106,7 +106,9 @@ export function Checkout() {
     .filter((linha): linha is { item: (typeof items)[number]; produto: Produto } => linha !== null);
 
   const precoLinha = (item: (typeof items)[number], produto: Produto) =>
-    item.charmMania && item.precoUnitario !== null ? item.precoUnitario : produto.preco;
+    item.charmMania && item.precoUnitario !== null
+      ? item.precoUnitario
+      : produto.preco + (item.adicional ? produto.adicional_preco ?? 0 : 0);
 
   const subtotal = linhas.reduce((total, { item, produto }) => total + precoLinha(item, produto) * item.quantidade, 0);
   const frete = opcaoSelecionada ? opcoes?.find((o) => o.id === opcaoSelecionada) : undefined;
@@ -167,6 +169,7 @@ export function Checkout() {
             quantidade: item.quantidade,
             cor: item.cor,
             variacao: item.variacao,
+            adicional: item.adicional,
             personalizacao: item.charmMania
               ? {
                   sequencia: item.charmMania.sequencia,
@@ -237,10 +240,12 @@ export function Checkout() {
                     ]
                       .filter(Boolean)
                       .join(" · ")
-                  : [item.cor, item.variacao].filter(Boolean).join(" · ");
+                  : [item.cor, item.variacao, item.adicional && produto.adicional_nome ? `+ ${produto.adicional_nome}` : null]
+                      .filter(Boolean)
+                      .join(" · ");
                 return (
                   <div
-                    key={`${produto.id}-${item.cor ?? ""}-${item.variacao ?? ""}-${item.charmMania?.configId ?? ""}`}
+                    key={`${produto.id}-${item.cor ?? ""}-${item.variacao ?? ""}-${item.adicional}-${item.charmMania?.configId ?? ""}`}
                     className="flex items-center justify-between border-b border-neutral-light pb-4"
                   >
                     <p className="text-navy">

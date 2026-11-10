@@ -81,6 +81,7 @@ export function ProjectDetail() {
   const [quantidade, setQuantidade] = useState(1);
   const [corSelecionada, setCorSelecionada] = useState("");
   const [variacaoSelecionada, setVariacaoSelecionada] = useState("");
+  const [incluirAdicional, setIncluirAdicional] = useState(false);
   const [charms, setCharms] = useState<Charm[]>([]);
   const [caixinha, setCaixinha] = useState<CaixinhaComCores | null>(null);
   const [coresLetra, setCoresLetra] = useState<Color[]>([]);
@@ -330,6 +331,20 @@ export function ProjectDetail() {
                       </Select>
                     </div>
                   )}
+                  {produto.adicional_nome && produto.adicional_preco != null && (
+                    <label className="flex items-center gap-3 text-navy mb-4">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4"
+                        checked={incluirAdicional}
+                        onChange={(e) => setIncluirAdicional(e.target.checked)}
+                      />
+                      <span className="label-caps">
+                        Incluir {produto.adicional_nome} (+
+                        {produto.adicional_preco.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })})
+                      </span>
+                    </label>
+                  )}
                   <div className="flex items-center gap-4 mb-4">
                     <Label htmlFor="quantidade">Quantidade</Label>
                     <input
@@ -350,10 +365,14 @@ export function ProjectDetail() {
                         produto.id,
                         quantidadeValida,
                         coresDisponiveis.length > 0 ? corSelecionada : null,
-                        variacoesDisponiveis.length > 0 ? variacaoSelecionada : null
+                        variacoesDisponiveis.length > 0 ? variacaoSelecionada : null,
+                        null,
+                        null,
+                        incluirAdicional && produto.adicional_preco != null
                       );
                       showToast({ title: "Adicionado ao carrinho", description: produto.nome, variant: "success" });
                       setQuantidade(1);
+                      setIncluirAdicional(false);
                     }}
                   >
                     Adicionar ao carrinho

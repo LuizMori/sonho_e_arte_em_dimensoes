@@ -96,6 +96,11 @@ export const produtoSchema = z.object({
   ativo: z.boolean(),
   tamanhoExibicao: z.string().trim().optional(),
   visivelAte: z.string().optional(),
+  adicionalNome: z.string().trim().optional(),
+  adicionalPreco: z.preprocess(
+    (valor) => (valor === "" || valor === null || valor === undefined ? undefined : valor),
+    z.coerce.number().min(0, "Informe um valor válido").optional()
+  ),
   valorLetra: z.preprocess(
     (valor) => (valor === "" || valor === null || valor === undefined ? undefined : valor),
     z.coerce.number().positive("Informe o valor por letra").optional()

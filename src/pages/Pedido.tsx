@@ -130,7 +130,9 @@ export function Pedido() {
 
         <Reveal className="space-y-4 mb-10">
           {itens.map((item) => {
-            const detalhe = [item.cor, item.variacao].filter(Boolean).join(" · ");
+            const detalhe = [item.cor, item.variacao, item.adicional ? `+ ${item.adicional.nome}` : null]
+              .filter(Boolean)
+              .join(" · ");
             return (
               <div key={item.id} className="border-b border-neutral-light pb-4">
                 <div className="flex items-center justify-between">

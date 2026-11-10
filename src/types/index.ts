@@ -98,6 +98,8 @@ export interface Produto {
   destaque: boolean;
   tamanho_exibicao: string | null;
   visivel_ate: string | null;
+  adicional_nome: string | null;
+  adicional_preco: number | null;
   exibir_catalogo: boolean;
   valor_letra: number | null;
   limite_contas: number | null;
@@ -194,6 +196,7 @@ export interface OrderItemDb {
   cor: string | null;
   variacao: string | null;
   personalizacao: PersonalizacaoSnapshot | null;
+  adicional: { nome: string; preco: number } | null;
   created_at: string;
 }
 

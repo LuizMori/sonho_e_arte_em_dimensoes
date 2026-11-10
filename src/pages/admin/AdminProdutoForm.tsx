@@ -97,6 +97,8 @@ export function AdminProdutoForm() {
           ativo: produto.ativo,
           tamanhoExibicao: produto.tamanho_exibicao ?? "",
           visivelAte: produto.visivel_ate ?? "",
+          adicionalNome: produto.adicional_nome ?? "",
+          adicionalPreco: produto.adicional_preco ?? undefined,
           valorLetra: produto.valor_letra ?? undefined,
           limiteContas: produto.limite_contas ?? undefined,
         });
@@ -185,6 +187,8 @@ export function AdminProdutoForm() {
       ativo: data.ativo,
       tamanho_exibicao: data.tamanhoExibicao || null,
       visivel_ate: data.visivelAte || null,
+      adicional_nome: data.adicionalNome && data.adicionalPreco != null ? data.adicionalNome : null,
+      adicional_preco: data.adicionalNome && data.adicionalPreco != null ? data.adicionalPreco : null,
       valor_letra: data.categoria === "charm-mania" ? data.valorLetra ?? null : null,
       limite_contas: data.categoria === "charm-mania" ? data.limiteContas ?? null : null,
     };
@@ -521,6 +525,26 @@ export function AdminProdutoForm() {
               <p className="text-xs text-navy/50 mt-2">
                 Aparece na página do produto no lugar das medidas em cm. Deixe em branco para continuar
                 mostrando a dimensão exata.
+              </p>
+            </div>
+
+            <div>
+              <p className="label-caps text-navy/70 mb-2">Item adicional opcional</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="adicionalNome">Nome</Label>
+                  <Input id="adicionalNome" placeholder="Ex: Box de armazenamento" {...register("adicionalNome")} />
+                </div>
+                <div>
+                  <Label htmlFor="adicionalPreco">Valor (R$)</Label>
+                  <Input id="adicionalPreco" type="number" step="0.01" min="0" {...register("adicionalPreco")} />
+                  <FieldError message={errors.adicionalPreco?.message} />
+                </div>
+              </div>
+              <p className="text-xs text-navy/50 mt-2">
+                Se preencher nome e valor, a página do produto mostra "Incluir [nome] (+valor)" e o cliente
+                escolhe se quer. O valor é somado ao preço do produto. Sem controle de estoque próprio. Deixe
+                em branco para não oferecer adicional.
               </p>
             </div>
 

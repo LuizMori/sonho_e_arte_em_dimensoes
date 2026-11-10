@@ -8,6 +8,9 @@ export interface CartItem {
   cor: string | null;
   variacao: string | null;
   charmMania: CharmManiaConfig | null;
+  // Marcou o item adicional opcional do produto (ex: box de armazenamento). O preço dele vem
+  // do próprio produto (adicional_preco) e é recalculado pelo servidor ao criar o pedido.
+  adicional: boolean;
   // Preço unitário já calculado (base + letras + pingentes + caixinha) no momento da
   // montagem — só usado para itens de Charm Mania, já que produto.preco sozinho não reflete
   // o valor real da peça personalizada. O servidor recalcula esse valor de qualquer forma
@@ -24,15 +27,23 @@ interface CartContextValue {
     cor?: string | null,
     variacao?: string | null,
     charmMania?: CharmManiaConfig | null,
-    precoUnitario?: number | null
+    precoUnitario?: number | null,
+    adicional?: boolean
   ) => void;
-  removeItem: (productId: string, cor: string | null, variacao: string | null, charmMania?: CharmManiaConfig | null) => void;
+  removeItem: (
+    productId: string,
+    cor: string | null,
+    variacao: string | null,
+    charmMania?: CharmManiaConfig | null,
+    adicional?: boolean
+  ) => void;
   updateQuantidade: (
     productId: string,
     quantidade: number,
     cor: string | null,
     variacao: string | null,
-    charmMania?: CharmManiaConfig | null
+    charmMania?: CharmManiaConfig | null,
+    adicional?: boolean
   ) => void;
   clear: () => void;
 }
@@ -49,11 +60,12 @@ function lerCarrinhoSalvo(): CartItem[] {
     if (!Array.isArray(dados)) return [];
     return dados
       .filter(
-        (item): item is Omit<CartItem, "cor" | "variacao" | "charmMania" | "precoUnitario"> & {
+        (item): item is Omit<CartItem, "cor" | "variacao" | "charmMania" | "precoUnitario" | "adicional"> & {
           cor?: string | null;
           variacao?: string | null;
           charmMania?: CharmManiaConfig | null;
           precoUnitario?: number | null;
+          adicional?: boolean;
         } => typeof item?.productId === "string" && typeof item?.quantidade === "number" && item.quantidade > 0
       )
       .map((item) => ({
@@ -62,6 +74,7 @@ function lerCarrinhoSalvo(): CartItem[] {
         variacao: typeof item.variacao === "string" ? item.variacao : null,
         charmMania: item.charmMania ?? null,
         precoUnitario: typeof item.precoUnitario === "number" ? item.precoUnitario : null,
+        adicional: item.adicional === true,
       }));
   } catch {
     return [];
@@ -73,11 +86,13 @@ const mesmoItem = (
   productId: string,
   cor: string | null,
   variacao: string | null,
-  charmMania: CharmManiaConfig | null = null
+  charmMania: CharmManiaConfig | null = null,
+  adicional = false
 ) =>
   item.productId === productId &&
   item.cor === cor &&
   item.variacao === variacao &&
+  item.adicional === adicional &&
   (item.charmMania?.configId ?? null) === (charmMania?.configId ?? null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -93,18 +108,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
     cor: string | null = null,
     variacao: string | null = null,
     charmMania: CharmManiaConfig | null = null,
-    precoUnitario: number | null = null
+    precoUnitario: number | null = null,
+    adicional = false
   ) => {
     setItems((prev) => {
-      const existente = prev.find((item) => mesmoItem(item, productId, cor, variacao, charmMania));
+      const existente = prev.find((item) => mesmoItem(item, productId, cor, variacao, charmMania, adicional));
       if (existente) {
         return prev.map((item) =>
-          mesmoItem(item, productId, cor, variacao, charmMania)
+          mesmoItem(item, productId, cor, variacao, charmMania, adicional)
             ? { ...item, quantidade: item.quantidade + quantidade }
             : item
         );
       }
-      return [...prev, { productId, quantidade, cor, variacao, charmMania, precoUnitario }];
+      return [...prev, { productId, quantidade, cor, variacao, charmMania, precoUnitario, adicional }];
     });
   };
 
@@ -112,9 +128,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     productId: string,
     cor: string | null,
     variacao: string | null,
-    charmMania: CharmManiaConfig | null = null
+    charmMania: CharmManiaConfig | null = null,
+    adicional = false
   ) => {
-    setItems((prev) => prev.filter((item) => !mesmoItem(item, productId, cor, variacao, charmMania)));
+    setItems((prev) => prev.filter((item) => !mesmoItem(item, productId, cor, variacao, charmMania, adicional)));
   };
 
   const updateQuantidade = (
@@ -122,14 +139,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     quantidade: number,
     cor: string | null,
     variacao: string | null,
-    charmMania: CharmManiaConfig | null = null
+    charmMania: CharmManiaConfig | null = null,
+    adicional = false
   ) => {
     if (quantidade <= 0) {
-      removeItem(productId, cor, variacao, charmMania);
+      removeItem(productId, cor, variacao, charmMania, adicional);
       return;
     }
     setItems((prev) =>
-      prev.map((item) => (mesmoItem(item, productId, cor, variacao, charmMania) ? { ...item, quantidade } : item))
+      prev.map((item) => (mesmoItem(item, productId, cor, variacao, charmMania, adicional) ? { ...item, quantidade } : item))
     );
   };
 

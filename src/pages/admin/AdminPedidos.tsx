@@ -100,7 +100,9 @@ export function AdminPedidos() {
                       {pedido.order_items
                         .filter((item) => !item.personalizacao)
                         .map((item) => {
-                          const detalhe = [item.cor, item.variacao].filter(Boolean).join(" · ");
+                          const detalhe = [item.cor, item.variacao, item.adicional ? `+ ${item.adicional.nome}` : null]
+                            .filter(Boolean)
+                            .join(" · ");
                           return `${item.quantidade}× ${item.products?.nome ?? item.nome_produto ?? "Produto removido"}${
                             detalhe ? ` (${detalhe})` : ""
                           }`;
