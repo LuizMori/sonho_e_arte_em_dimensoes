@@ -31,6 +31,10 @@ interface OpcaoFrete {
   prazoDias: number;
 }
 
+// Produto sem peso/dimensões cadastrados (campos opcionais) é cotado como embalagem média.
+// Mesmos valores em api/orders/create.ts, que revalida o frete.
+const EMBALAGEM_PADRAO = { pesoG: 600, alturaCm: 18, larguraCm: 15, comprimentoCm: 15 };
+
 interface ItemFrete {
   quantidade: number;
   pesoG: number;
@@ -131,10 +135,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!produto) throw new Error(`Produto ${item.productId} não encontrado`);
       return {
         quantidade: item.quantidade,
-        pesoG: produto.peso_g,
-        alturaCm: produto.altura_cm,
-        larguraCm: produto.largura_cm,
-        comprimentoCm: produto.comprimento_cm,
+        pesoG: produto.peso_g ?? EMBALAGEM_PADRAO.pesoG,
+        alturaCm: produto.altura_cm ?? EMBALAGEM_PADRAO.alturaCm,
+        larguraCm: produto.largura_cm ?? EMBALAGEM_PADRAO.larguraCm,
+        comprimentoCm: produto.comprimento_cm ?? EMBALAGEM_PADRAO.comprimentoCm,
       };
     });
 

@@ -89,10 +89,10 @@ export function AdminProdutoForm() {
           preco: produto.preco,
           categoria: produto.categoria,
           destaque: produto.destaque,
-          pesoG: produto.peso_g,
-          alturaCm: produto.altura_cm,
-          larguraCm: produto.largura_cm,
-          comprimentoCm: produto.comprimento_cm,
+          pesoG: produto.peso_g ?? undefined,
+          alturaCm: produto.altura_cm ?? undefined,
+          larguraCm: produto.largura_cm ?? undefined,
+          comprimentoCm: produto.comprimento_cm ?? undefined,
           stock: produto.stock,
           ativo: produto.ativo,
           tamanhoExibicao: produto.tamanho_exibicao ?? "",
@@ -179,10 +179,10 @@ export function AdminProdutoForm() {
       preco: data.preco,
       categoria: data.categoria,
       destaque: data.destaque,
-      peso_g: data.pesoG,
-      altura_cm: data.alturaCm,
-      largura_cm: data.larguraCm,
-      comprimento_cm: data.comprimentoCm,
+      peso_g: data.pesoG ?? null,
+      altura_cm: data.alturaCm ?? null,
+      largura_cm: data.larguraCm ?? null,
+      comprimento_cm: data.comprimentoCm ?? null,
       stock: data.stock,
       ativo: data.ativo,
       tamanho_exibicao: data.tamanhoExibicao || null,
@@ -470,9 +470,11 @@ export function AdminProdutoForm() {
             )}
 
             <div>
-              <p className="label-caps text-navy/70 mb-4">Peso e dimensões (obrigatórios)</p>
+              <p className="label-caps text-navy/70 mb-4">Peso e dimensões (opcionais)</p>
               <p className="text-sm text-navy/50 mb-3">
-                Não sabe a medida exata? Preencha com uma embalagem padrão e ajuste depois se precisar.
+                Em branco, peso e dimensões não aparecem na página do produto; o frete é calculado com uma
+                embalagem média (600 g, 18 × 15 × 15 cm). Não sabe a medida exata? Use uma embalagem padrão
+                abaixo e ajuste depois.
               </p>
               <div className="flex flex-wrap gap-3 mb-4">
                 {EMBALAGENS_PADRAO.map((embalagem) => (

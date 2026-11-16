@@ -89,10 +89,10 @@ export interface Produto {
   nome: string;
   descricao: string;
   preco: number;
-  peso_g: number;
-  altura_cm: number;
-  largura_cm: number;
-  comprimento_cm: number;
+  peso_g: number | null;
+  altura_cm: number | null;
+  largura_cm: number | null;
+  comprimento_cm: number | null;
   stock: number;
   ativo: boolean;
   categoria: CategoriaSlug;

@@ -25,10 +25,10 @@ interface LinhaImportacao {
     descricao: string;
     preco: number;
     categoria: CategoriaSlug;
-    peso_g: number;
-    altura_cm: number;
-    largura_cm: number;
-    comprimento_cm: number;
+    peso_g: number | null;
+    altura_cm: number | null;
+    largura_cm: number | null;
+    comprimento_cm: number | null;
     stock: number;
     ativo: boolean;
     destaque: boolean;
@@ -77,17 +77,22 @@ function validarLinha(bruto: Record<string, string>, numero: number): LinhaImpor
     erros.push(`categoria inválida (use: ${categoriasProduto.map((c) => c.slug).join(", ")})`);
   }
 
+  // Peso e dimensões são opcionais (em branco = não aparecem nos detalhes do produto).
   const pesoG = paraNumero(bruto.peso_g ?? "");
-  if (pesoG === null || pesoG <= 0 || !Number.isInteger(pesoG)) erros.push("peso_g inválido");
+  if (pesoG !== null && (pesoG <= 0 || !Number.isInteger(pesoG))) erros.push("peso_g inválido");
 
   const alturaCm = paraNumero(bruto.altura_cm ?? "");
-  if (alturaCm === null || alturaCm <= 0) erros.push("altura_cm inválido");
+  if (alturaCm !== null && alturaCm <= 0) erros.push("altura_cm inválido");
 
   const larguraCm = paraNumero(bruto.largura_cm ?? "");
-  if (larguraCm === null || larguraCm <= 0) erros.push("largura_cm inválido");
+  if (larguraCm !== null && larguraCm <= 0) erros.push("largura_cm inválido");
 
   const comprimentoCm = paraNumero(bruto.comprimento_cm ?? "");
-  if (comprimentoCm === null || comprimentoCm <= 0) erros.push("comprimento_cm inválido");
+  if (comprimentoCm !== null && comprimentoCm <= 0) erros.push("comprimento_cm inválido");
+  const medidasPreenchidas = [alturaCm, larguraCm, comprimentoCm].filter((m) => m !== null).length;
+  if (medidasPreenchidas > 0 && medidasPreenchidas < 3) {
+    erros.push("preencha altura, largura e comprimento juntos, ou deixe as três em branco");
+  }
 
   const stockValor = bruto.stock?.trim() ?? "";
   const stock = stockValor === "" ? 0 : paraNumero(stockValor);
@@ -131,10 +136,10 @@ function validarLinha(bruto: Record<string, string>, numero: number): LinhaImpor
       descricao,
       preco: preco as number,
       categoria: categoriaValida!.slug as CategoriaSlug,
-      peso_g: pesoG as number,
-      altura_cm: alturaCm as number,
-      largura_cm: larguraCm as number,
-      comprimento_cm: comprimentoCm as number,
+      peso_g: pesoG,
+      altura_cm: alturaCm,
+      largura_cm: larguraCm,
+      comprimento_cm: comprimentoCm,
       stock: stock as number,
       ativo: paraBooleano(bruto.ativo ?? "", true),
       destaque: paraBooleano(bruto.destaque ?? "", false),

@@ -35,6 +35,10 @@ interface CreateOrderPayload {
   endereco: EnderecoPayload;
 }
 
+// Produto sem peso/dimensões cadastrados (campos opcionais) é cotado como embalagem média.
+// Mesmos valores em api/shipping/quote.ts — precisam bater pra revalidação do frete passar.
+const EMBALAGEM_PADRAO = { pesoG: 600, alturaCm: 18, larguraCm: 15, comprimentoCm: 15 };
+
 interface MelhorEnvioOpcao {
   price?: string;
   error?: string;
@@ -162,10 +166,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const produto = produtosFrete.find((p) => p.id === item.productId);
     return {
       quantidade: item.quantidade,
-      pesoG: produto?.peso_g ?? 0,
-      alturaCm: produto?.altura_cm ?? 0,
-      larguraCm: produto?.largura_cm ?? 0,
-      comprimentoCm: produto?.comprimento_cm ?? 0,
+      pesoG: produto?.peso_g ?? EMBALAGEM_PADRAO.pesoG,
+      alturaCm: produto?.altura_cm ?? EMBALAGEM_PADRAO.alturaCm,
+      larguraCm: produto?.largura_cm ?? EMBALAGEM_PADRAO.larguraCm,
+      comprimentoCm: produto?.comprimento_cm ?? EMBALAGEM_PADRAO.comprimentoCm,
     };
   });
 

@@ -191,15 +191,17 @@ export function ProjectDetail() {
   const metadados = [
     { label: "Categoria", valor: categoria?.nome ?? "" },
     { label: "Preço", valor: produto.preco.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) },
-    { label: "Peso", valor: `${produto.peso_g} g` },
+    produto.peso_g != null ? { label: "Peso", valor: `${produto.peso_g} g` } : null,
     produto.tamanho_exibicao
       ? { label: "Tamanho", valor: produto.tamanho_exibicao }
-      : {
-          label: "Dimensões",
-          valor: `${produto.altura_cm} × ${produto.largura_cm} × ${produto.comprimento_cm} cm`,
-        },
+      : produto.altura_cm != null && produto.largura_cm != null && produto.comprimento_cm != null
+        ? {
+            label: "Dimensões",
+            valor: `${produto.altura_cm} × ${produto.largura_cm} × ${produto.comprimento_cm} cm`,
+          }
+        : null,
     { label: "Disponibilidade", valor: produto.stock > 0 ? `${produto.stock} em estoque` : "Sem estoque" },
-  ];
+  ].filter((item): item is { label: string; valor: string } => item !== null);
 
   return (
     <>

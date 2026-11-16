@@ -69,7 +69,11 @@ export const resetPasswordSchema = z
 
 export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
-export const produtoSchema = z.object({
+const numeroOpcional = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess((valor) => (valor === "" || valor === null || valor === undefined ? undefined : valor), schema.optional());
+
+export const produtoSchema = z
+  .object({
   nome: z.string().trim().min(2, "Informe o nome do produto"),
   descricao: z.string().trim().min(10, "Descreva o produto com pelo menos 10 caracteres"),
   preco: z.coerce.number().positive("Informe um preço válido"),
@@ -89,10 +93,10 @@ export const produtoSchema = z.object({
     { required_error: "Selecione uma categoria" }
   ),
   destaque: z.boolean(),
-  pesoG: z.coerce.number().int("Informe o peso em gramas").positive("Informe o peso em gramas"),
-  alturaCm: z.coerce.number().positive("Informe a altura em cm"),
-  larguraCm: z.coerce.number().positive("Informe a largura em cm"),
-  comprimentoCm: z.coerce.number().positive("Informe a profundidade em cm"),
+  pesoG: numeroOpcional(z.coerce.number().int("Informe o peso em gramas").positive("Informe o peso em gramas")),
+  alturaCm: numeroOpcional(z.coerce.number().positive("Informe a altura em cm")),
+  larguraCm: numeroOpcional(z.coerce.number().positive("Informe a largura em cm")),
+  comprimentoCm: numeroOpcional(z.coerce.number().positive("Informe a profundidade em cm")),
   stock: z.coerce.number().int().min(0, "Informe a quantidade em estoque"),
   ativo: z.boolean(),
   tamanhoExibicao: z.string().trim().optional(),
@@ -110,7 +114,22 @@ export const produtoSchema = z.object({
     (valor) => (valor === "" || valor === null || valor === undefined ? undefined : valor),
     z.coerce.number().int("Informe um número inteiro").positive("Informe um número maior que zero").optional()
   ),
-});
+  })
+  .superRefine((dados, ctx) => {
+    // Dimensões são tudo ou nada: com uma medida só, não dá pra mostrar nem cotar frete.
+    const medidas = [
+      ["alturaCm", dados.alturaCm],
+      ["larguraCm", dados.larguraCm],
+      ["comprimentoCm", dados.comprimentoCm],
+    ] as const;
+    if (medidas.some(([, valor]) => valor !== undefined)) {
+      for (const [campo, valor] of medidas) {
+        if (valor === undefined) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, path: [campo], message: "Preencha as três medidas ou deixe todas em branco" });
+        }
+      }
+    }
+  });
 
 export type ProdutoFormData = z.infer<typeof produtoSchema>;
 
