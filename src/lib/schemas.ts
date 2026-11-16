@@ -83,6 +83,7 @@ export const produtoSchema = z.object({
       "presentes",
       "sazonais",
       "utilidades",
+      "luminarias",
       "charm-mania",
     ],
     { required_error: "Selecione uma categoria" }

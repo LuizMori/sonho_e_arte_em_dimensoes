@@ -11,6 +11,7 @@ export const categoriasProduto: Categoria[] = [
   { slug: "presentes", nome: "Presentes" },
   { slug: "sazonais", nome: "Sazonais" },
   { slug: "utilidades", nome: "Utilidades" },
+  { slug: "luminarias", nome: "Luminárias" },
   { slug: "charm-mania", nome: "Charm Mania" },
 ];
 

@@ -7,6 +7,7 @@ export type CategoriaSlug =
   | "presentes"
   | "sazonais"
   | "utilidades"
+  | "luminarias"
   | "charm-mania";
 
 export interface Categoria {
